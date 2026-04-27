@@ -96,6 +96,13 @@
     );
 
     // --- 2. ユーティリティ関数とデータ ---
+    const parseNum = (str) => {
+      if (!str) return 0;
+      if (typeof str === 'number') return str;
+      const num = parseFloat(String(str).replace(/[^0-9.-]+/g, ""));
+      return isNaN(num) ? 0 : num;
+    };
+
     function parseCSV(text) {
       const lines = [];
       let currentLine = [];
@@ -151,18 +158,17 @@
         if (lines[i].length === 1 && lines[i][0] === "") continue;
         const obj = {};
         headers.forEach((header, index) => {
-          obj[header] = lines[i][index] || "";
+          let val = lines[i][index] || "";
+          if (['消化金額', '表示回数', 'クリック数', '応募開始数', '応募数'].includes(header)) {
+            obj[header] = parseNum(val);
+          } else {
+            obj[header] = val;
+          }
         });
         data.push(obj);
       }
       return data;
     }
-
-    const parseNum = (str) => {
-      if (!str) return 0;
-      const num = parseFloat(String(str).replace(/[^0-9.-]+/g, ""));
-      return isNaN(num) ? 0 : num;
-    };
 
     const CATEGORIES = [
       '事務・オフィス系', '営業職', 'ドライバー・物流・運送', '製造・工場・軽作業',
@@ -221,10 +227,7 @@
       const [comparePeriodBFrom, setComparePeriodBFrom] = useState('');
       const [comparePeriodBTo, setComparePeriodBTo] = useState('');
 
-      const [appliedFilters, setAppliedFilters] = useState({
-        freeWord: '', location: '', categoryFilter: '', campaignFilter: 'all', searchMode: 'OR',
-        selectedJobTitles: [], periodFrom: '', periodTo: '', includeUnknown: true
-      });
+      // ▼ 削除：適用待機用の appliedFilters ステートを削除しました
 
       const dropdownRef = useRef(null);
       
@@ -271,23 +274,7 @@
         setSelectedJobTitles([]);
       }, [freeWord]);
 
-      const hasUnappliedChanges = 
-        freeWord !== appliedFilters.freeWord ||
-        location !== appliedFilters.location ||
-        categoryFilter !== appliedFilters.categoryFilter ||
-        campaignFilter !== appliedFilters.campaignFilter ||
-        searchMode !== appliedFilters.searchMode ||
-        JSON.stringify(selectedJobTitles) !== JSON.stringify(appliedFilters.selectedJobTitles) ||
-        periodFrom !== appliedFilters.periodFrom ||
-        periodTo !== appliedFilters.periodTo ||
-        includeUnknown !== appliedFilters.includeUnknown;
-
-      const handleApplyFilters = () => {
-        setAppliedFilters({
-          freeWord, location, categoryFilter, campaignFilter, searchMode,
-          selectedJobTitles, periodFrom, periodTo, includeUnknown
-        });
-      };
+      // ▼ 削除：hasUnappliedChanges や handleApplyFilters を削除しました
 
       useEffect(() => {
         const fetchData = async () => {
@@ -474,8 +461,7 @@
           let matchCategory = true;
           if (categoryFilter) {
             const rowCategory = row['職業カテゴリー'] || "";
-            const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-            matchCategory = categoriesInRow.includes(categoryFilter);
+            matchCategory = rowCategory.includes(categoryFilter);
           }
 
           const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
@@ -497,39 +483,13 @@
 
         const validJobs = candidateJobs.filter(job => {
           const jobTokens = splitKeywords(job);
+          if (jobTokens.length === 0) return true;
           
-          return data.some(row => {
+          return filtered.some(row => {
             const jobName = row['職種名'] || "";
-            const matchFreeWord = jobTokens.length === 0 ? true :
-              searchMode === 'AND'
+            return searchMode === 'AND'
                 ? jobTokens.every(kw => jobName.includes(kw))
                 : jobTokens.some(kw => jobName.includes(kw));
-                
-            if (!matchFreeWord) return false;
-
-            const loc = row['勤務地'] || "";
-            const matchLocation = locationKeywords.length === 0 ? true :
-              searchMode === 'AND'
-                ? locationKeywords.every(kw => loc.includes(kw))
-                : locationKeywords.some(kw => loc.includes(kw));
-                
-            if (!matchLocation) return false;
-
-            const campaign = row['キャンペーン'] || "";
-            const hasSA = campaign.includes("SA-");
-            if (campaignFilter === 'sa-only' && !hasSA) return false;
-            if (campaignFilter === 'non-sa-only' && hasSA) return false;
-
-            if (categoryFilter) {
-              const rowCategory = row['職業カテゴリー'] || "";
-              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-              if (!categoriesInRow.includes(categoryFilter)) return false;
-            }
-
-            const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-            if (!matchPeriod) return false;
-
-            return true;
           });
         });
 
@@ -537,8 +497,7 @@
       }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, periodFrom, periodTo, includeUnknown]);
 
       const { filteredData, totals } = useMemo(() => {
-        const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-        
+        // ▼ 変更：appliedFilters ではなく、現在のステートを直接参照
         const freeWordKeywords = splitKeywords(freeWord);
         const locationKeywords = splitKeywords(location);
 
@@ -581,8 +540,7 @@
           let matchCategory = true;
           if (categoryFilter) {
             const rowCategory = row['職業カテゴリー'] || "";
-            const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-            matchCategory = categoriesInRow.includes(categoryFilter);
+            matchCategory = rowCategory.includes(categoryFilter);
           }
 
           const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
@@ -600,11 +558,11 @@
         };
 
         filtered.forEach(row => {
-          calcTotals.cost += parseNum(row['消化金額']);
-          calcTotals.impressions += parseNum(row['表示回数']);
-          calcTotals.clicks += parseNum(row['クリック数']);
-          calcTotals.applyStarts += parseNum(row['応募開始数']);
-          calcTotals.applies += parseNum(row['応募数']);
+          calcTotals.cost += (row['消化金額'] || 0);
+          calcTotals.impressions += (row['表示回数'] || 0);
+          calcTotals.clicks += (row['クリック数'] || 0);
+          calcTotals.applyStarts += (row['応募開始数'] || 0);
+          calcTotals.applies += (row['応募数'] || 0);
         });
 
         calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
@@ -614,96 +572,107 @@
         calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
 
         return { filteredData: filtered, totals: calcTotals };
-      }, [data, appliedFilters, comparisonMode]);
+      // ▼ 変更：依存配列を各ステートに戻す
+      }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown, comparisonMode]);
 
       const simulationResults = useMemo(() => {
-        const { location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-        const targetKeywords = selectedJobTitles.map(job => ({ keyword: job, suffix: '' }));
+        // ▼ 変更：appliedFilters ではなく、現在のステートを直接参照
+        const targetKeywords = selectedJobTitles.map(job => ({ keyword: job, suffix: '', tokens: splitKeywords(job) }));
 
         if (targetKeywords.length === 0) return [];
 
         const locationKeywords = splitKeywords(location);
-        const results = [];
-
-        targetKeywords.forEach(({ keyword, suffix }) => {
-          const keywordTokens = splitKeywords(keyword);
-          
-          const filtered = data.filter(row => {
-            const jobName = row['職種名'] || "";
-            const matchFreeWord = keywordTokens.length === 0 ? true :
-              searchMode === 'AND'
-                ? keywordTokens.every(kw => jobName.includes(kw))
-                : keywordTokens.some(kw => jobName.includes(kw));
-
+        
+        // 1. 事前フィルタリング (職種名以外)
+        const preFiltered = data.filter(row => {
             const loc = row['勤務地'] || "";
             const matchLocation = locationKeywords.length === 0 ? true :
               searchMode === 'AND'
                 ? locationKeywords.every(kw => loc.includes(kw))
                 : locationKeywords.some(kw => loc.includes(kw));
+            if (!matchLocation) return false;
 
             const campaign = row['キャンペーン'] || "";
             const hasSA = campaign.includes("SA-");
-            let matchCampaign = true;
-            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+            if (campaignFilter === 'sa-only' && !hasSA) return false;
+            if (campaignFilter === 'non-sa-only' && hasSA) return false;
 
-            let matchCategory = true;
             if (categoryFilter) {
               const rowCategory = row['職業カテゴリー'] || "";
-              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-              matchCategory = categoriesInRow.includes(categoryFilter);
+              if (!rowCategory.includes(categoryFilter)) return false; 
             }
 
             const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+            if (!matchPeriod) return false;
 
-            return matchFreeWord && matchLocation && matchCampaign && matchCategory && matchPeriod;
-          });
+            return true;
+        });
 
-          if (filtered.length > 0) {
-            const calcTotals = {
-              keyword: keyword,
-              suffix: suffix,
-              count: filtered.length,
-              cost: 0,
-              impressions: 0,
-              clicks: 0,
-              applyStarts: 0,
-              applies: 0
-            };
+        // 2. 集計箱の準備
+        const accumulators = targetKeywords.map(tk => ({
+            keyword: tk.keyword,
+            suffix: tk.suffix,
+            tokens: tk.tokens,
+            count: 0,
+            cost: 0,
+            impressions: 0,
+            clicks: 0,
+            applyStarts: 0,
+            applies: 0
+        }));
 
-            filtered.forEach(row => {
-              calcTotals.cost += parseNum(row['消化金額']);
-              calcTotals.impressions += parseNum(row['表示回数']);
-              calcTotals.clicks += parseNum(row['クリック数']);
-              calcTotals.applyStarts += parseNum(row['応募開始数']);
-              calcTotals.applies += parseNum(row['応募数']);
+        // 3. 1回のループで振り分け
+        preFiltered.forEach(row => {
+            const jobName = row['職種名'] || "";
+            const cost = row['消化金額'] || 0;
+            const impressions = row['表示回数'] || 0;
+            const clicks = row['クリック数'] || 0;
+            const applyStarts = row['応募開始数'] || 0;
+            const applies = row['応募数'] || 0;
+
+            accumulators.forEach(acc => {
+                const matchFreeWord = acc.tokens.length === 0 ? true :
+                  searchMode === 'AND'
+                    ? acc.tokens.every(kw => jobName.includes(kw))
+                    : acc.tokens.some(kw => jobName.includes(kw));
+                
+                if (matchFreeWord) {
+                    acc.count++;
+                    acc.cost += cost;
+                    acc.impressions += impressions;
+                    acc.clicks += clicks;
+                    acc.applyStarts += applyStarts;
+                    acc.applies += applies;
+                }
             });
+        });
 
-            calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-            calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-            calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-            calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-            calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
-
-            results.push(calcTotals);
-          }
+        // 4. 最終計算
+        const results = [];
+        accumulators.forEach(acc => {
+            if (acc.count > 0) {
+                acc.ctr = acc.impressions > 0 ? (acc.clicks / acc.impressions) * 100 : null;
+                acc.applyStartRate = acc.clicks > 0 ? (acc.applyStarts / acc.clicks) * 100 : null;
+                acc.cvr = acc.clicks > 0 ? (acc.applies / acc.clicks) * 100 : null;
+                acc.cpc = acc.clicks > 0 ? acc.cost / acc.clicks : null;
+                acc.cpa = acc.applies > 0 ? acc.cost / acc.applies : null;
+                results.push(acc);
+            }
         });
 
         return results.sort((a, b) => b.count - a.count);
-      }, [data, appliedFilters]);
+      // ▼ 変更：依存配列を各ステートに戻す
+      }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown]);
 
       const prefectureResults = useMemo(() => {
         if (comparisonMode !== 'prefecture') return [];
 
-        const { freeWord, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-
+        // ▼ 変更：appliedFilters ではなく、現在のステートを直接参照
         const freeWordKeywords = splitKeywords(freeWord);
-        const results = [];
 
-        PREFECTURES.forEach(pref => {
-          const filtered = data.filter(row => {
+        // 1. 事前フィルタリング (勤務地以外)
+        const preFiltered = data.filter(row => {
             const jobName = row['職種名'] || "";
-            
             let matchJob = true;
             if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
               const matchFreeWord = freeWordKeywords.length > 0 ? (
@@ -711,73 +680,86 @@
                   ? freeWordKeywords.every(kw => jobName.includes(kw))
                   : freeWordKeywords.some(kw => jobName.includes(kw))
               ) : false;
-              
               const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
-              
               matchJob = matchFreeWord || matchSelectedJobs;
             }
-
-            const loc = row['勤務地'] || "";
-            const matchLocation = loc.includes(pref);
+            if (!matchJob) return false;
 
             const campaign = row['キャンペーン'] || "";
             const hasSA = campaign.includes("SA-");
-            let matchCampaign = true;
-            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+            if (campaignFilter === 'sa-only' && !hasSA) return false;
+            if (campaignFilter === 'non-sa-only' && hasSA) return false;
 
-            let matchCategory = true;
             if (categoryFilter) {
               const rowCategory = row['職業カテゴリー'] || "";
-              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-              matchCategory = categoriesInRow.includes(categoryFilter);
+              if (!rowCategory.includes(categoryFilter)) return false; 
             }
 
             const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+            if (!matchPeriod) return false;
 
-            return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
-          });
+            return true;
+        });
 
-          if (filtered.length > 0) {
-            const calcTotals = {
-              prefecture: pref,
-              count: filtered.length,
-              cost: 0,
-              impressions: 0,
-              clicks: 0,
-              applyStarts: 0,
-              applies: 0
+        // 2. 集計箱の準備
+        const accumulators = {};
+        PREFECTURES.forEach(pref => {
+            accumulators[pref] = {
+                prefecture: pref,
+                count: 0,
+                cost: 0,
+                impressions: 0,
+                clicks: 0,
+                applyStarts: 0,
+                applies: 0
             };
+        });
 
-            filtered.forEach(row => {
-              calcTotals.cost += parseNum(row['消化金額']);
-              calcTotals.impressions += parseNum(row['表示回数']);
-              calcTotals.clicks += parseNum(row['クリック数']);
-              calcTotals.applyStarts += parseNum(row['応募開始数']);
-              calcTotals.applies += parseNum(row['応募数']);
+        // 3. 1回のループで振り分け
+        preFiltered.forEach(row => {
+            const loc = row['勤務地'] || "";
+            if (!loc) return;
+            const cost = row['消化金額'] || 0;
+            const impressions = row['表示回数'] || 0;
+            const clicks = row['クリック数'] || 0;
+            const applyStarts = row['応募開始数'] || 0;
+            const applies = row['応募数'] || 0;
+
+            PREFECTURES.forEach(pref => {
+                if (loc.includes(pref)) {
+                    const acc = accumulators[pref];
+                    acc.count++;
+                    acc.cost += cost;
+                    acc.impressions += impressions;
+                    acc.clicks += clicks;
+                    acc.applyStarts += applyStarts;
+                    acc.applies += applies;
+                }
             });
+        });
 
-            calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-            calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-            calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-            calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-            calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+        // 4. 最終計算
+        const results = [];
+        PREFECTURES.forEach(pref => {
+            const acc = accumulators[pref];
+            if (acc.count > 0) {
+                acc.ctr = acc.impressions > 0 ? (acc.clicks / acc.impressions) * 100 : null;
+                acc.applyStartRate = acc.clicks > 0 ? (acc.applyStarts / acc.clicks) * 100 : null;
+                acc.cvr = acc.clicks > 0 ? (acc.applies / acc.clicks) * 100 : null;
+                acc.cpc = acc.clicks > 0 ? acc.cost / acc.clicks : null;
+                acc.cpa = acc.applies > 0 ? acc.cost / acc.applies : null;
 
-            if (calcTotals.count >= 1) {
-              if (showOnlyCpa && (calcTotals.cpa === null || calcTotals.cpa < 1)) {
-                // 何もしない
-              } else {
-                results.push(calcTotals);
-              }
+                if (showOnlyCpa && (acc.cpa === null || acc.cpa < 1)) {
+                    // 何もしない
+                } else {
+                    results.push(acc);
+                }
             }
-          }
         });
 
         return results.sort((a, b) => {
           if (a.cpa === null && b.cpa === null) {
-            if (a.cpc === null && b.cpc === null) {
-              return b.count - a.count;
-            }
+            if (a.cpc === null && b.cpc === null) return b.count - a.count;
             if (a.cpc === null) return 1;
             if (b.cpc === null) return -1;
             return a.cpc - b.cpc;
@@ -787,18 +769,18 @@
           if (b.cpa === null) return -1;
           return a.cpa - b.cpa;
         });
-      }, [data, appliedFilters, comparisonMode, showOnlyCpa]);
+      // ▼ 変更：依存配列を各ステートに戻す
+      }, [data, freeWord, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown, comparisonMode, showOnlyCpa]);
 
       const periodResults = useMemo(() => {
         if (comparisonMode !== 'period') return [];
 
-        const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles } = appliedFilters;
-
+        // ▼ 変更：appliedFilters ではなく、現在のステートを直接参照
         const freeWordKeywords = splitKeywords(freeWord);
         const locationKeywords = splitKeywords(location);
 
-        const calcForPeriod = (from, to, labelStr) => {
-          const filtered = data.filter(row => {
+        // 1. 事前フィルタリング (集計期間以外)
+        const preFiltered = data.filter(row => {
             const jobName = row['職種名'] || "";
             let matchJob = true;
             if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
@@ -810,58 +792,27 @@
               const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
               matchJob = matchFreeWord || matchSelectedJobs;
             }
+            if (!matchJob) return false;
 
             const loc = row['勤務地'] || "";
             const matchLocation = locationKeywords.length === 0 ? true :
               searchMode === 'AND'
                 ? locationKeywords.every(kw => loc.includes(kw))
                 : locationKeywords.some(kw => loc.includes(kw));
+            if (!matchLocation) return false;
 
             const campaign = row['キャンペーン'] || "";
             const hasSA = campaign.includes("SA-");
-            let matchCampaign = true;
-            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+            if (campaignFilter === 'sa-only' && !hasSA) return false;
+            if (campaignFilter === 'non-sa-only' && hasSA) return false;
 
-            let matchCategory = true;
             if (categoryFilter) {
               const rowCategory = row['職業カテゴリー'] || "";
-              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-              matchCategory = categoriesInRow.includes(categoryFilter);
+              if (!rowCategory.includes(categoryFilter)) return false; 
             }
 
-            const matchPeriod = checkPeriodMatch(row['集計期間'], from, to, false);
-
-            return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
-          });
-
-          const calcTotals = {
-            label: labelStr,
-            isDiff: false,
-            count: filtered.length,
-            cost: 0,
-            impressions: 0,
-            clicks: 0,
-            applyStarts: 0,
-            applies: 0
-          };
-
-          filtered.forEach(row => {
-            calcTotals.cost += parseNum(row['消化金額']);
-            calcTotals.impressions += parseNum(row['表示回数']);
-            calcTotals.clicks += parseNum(row['クリック数']);
-            calcTotals.applyStarts += parseNum(row['応募開始数']);
-            calcTotals.applies += parseNum(row['応募数']);
-          });
-
-          calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-          calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-          calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-          calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-          calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
-
-          return calcTotals;
-        };
+            return true;
+        });
 
         const formatLabel = (from, to) => {
           if (!from && !to) return "指定なし (全期間)";
@@ -873,27 +824,65 @@
         const labelA = formatLabel(comparePeriodAFrom, comparePeriodATo);
         const labelB = formatLabel(comparePeriodBFrom, comparePeriodBTo);
 
-        const resA = calcForPeriod(comparePeriodAFrom, comparePeriodATo, `期間 A : ${labelA}`);
-        const resB = calcForPeriod(comparePeriodBFrom, comparePeriodBTo, `期間 B : ${labelB}`);
+        const accA = { label: `期間 A : ${labelA}`, isDiff: false, count: 0, cost: 0, impressions: 0, clicks: 0, applyStarts: 0, applies: 0 };
+        const accB = { label: `期間 B : ${labelB}`, isDiff: false, count: 0, cost: 0, impressions: 0, clicks: 0, applyStarts: 0, applies: 0 };
+
+        // 3. 1回のループで振り分け
+        preFiltered.forEach(row => {
+            const periodStr = row['集計期間'];
+            const cost = row['消化金額'] || 0;
+            const impressions = row['表示回数'] || 0;
+            const clicks = row['クリック数'] || 0;
+            const applyStarts = row['応募開始数'] || 0;
+            const applies = row['応募数'] || 0;
+
+            if (checkPeriodMatch(periodStr, comparePeriodAFrom, comparePeriodATo, false)) {
+                accA.count++;
+                accA.cost += cost;
+                accA.impressions += impressions;
+                accA.clicks += clicks;
+                accA.applyStarts += applyStarts;
+                accA.applies += applies;
+            }
+
+            if (checkPeriodMatch(periodStr, comparePeriodBFrom, comparePeriodBTo, false)) {
+                accB.count++;
+                accB.cost += cost;
+                accB.impressions += impressions;
+                accB.clicks += clicks;
+                accB.applyStarts += applyStarts;
+                accB.applies += applies;
+            }
+        });
+
+        // 4. 率の計算と差分の生成
+        [accA, accB].forEach(acc => {
+            acc.ctr = acc.impressions > 0 ? (acc.clicks / acc.impressions) * 100 : null;
+            acc.applyStartRate = acc.clicks > 0 ? (acc.applyStarts / acc.clicks) * 100 : null;
+            acc.cvr = acc.clicks > 0 ? (acc.applies / acc.clicks) * 100 : null;
+            acc.cpc = acc.clicks > 0 ? acc.cost / acc.clicks : null;
+            acc.cpa = acc.applies > 0 ? acc.cost / acc.applies : null;
+        });
 
         const diff = {
           label: '差分 (B － A)',
           isDiff: true,
-          count: resB.count - resA.count,
-          cost: resB.cost - resA.cost,
-          impressions: resB.impressions - resA.impressions,
-          clicks: resB.clicks - resA.clicks,
-          applyStarts: resB.applyStarts - resA.applyStarts,
-          applies: resB.applies - resA.applies,
-          ctr: (resB.ctr !== null && resA.ctr !== null) ? resB.ctr - resA.ctr : null,
-          applyStartRate: (resB.applyStartRate !== null && resA.applyStartRate !== null) ? resB.applyStartRate - resA.applyStartRate : null,
-          cvr: (resB.cvr !== null && resA.cvr !== null) ? resB.cvr - resA.cvr : null,
-          cpc: (resB.cpc !== null && resA.cpc !== null) ? resB.cpc - resA.cpc : null,
-          cpa: (resB.cpa !== null && resA.cpa !== null) ? resB.cpa - resA.cpa : null,
+          count: accB.count - accA.count,
+          cost: accB.cost - accA.cost,
+          impressions: accB.impressions - accA.impressions,
+          clicks: accB.clicks - accA.clicks,
+          applyStarts: accB.applyStarts - accA.applyStarts,
+          applies: accB.applies - accA.applies,
+          ctr: (accB.ctr !== null && accA.ctr !== null) ? accB.ctr - accA.ctr : null,
+          applyStartRate: (accB.applyStartRate !== null && accA.applyStartRate !== null) ? accB.applyStartRate - accA.applyStartRate : null,
+          cvr: (accB.cvr !== null && accA.cvr !== null) ? accB.cvr - accA.cvr : null,
+          cpc: (accB.cpc !== null && accA.cpc !== null) ? accB.cpc - accA.cpc : null,
+          cpa: (accB.cpa !== null && accA.cpa !== null) ? accB.cpa - accA.cpa : null,
         };
 
-        return [resA, resB, diff];
-      }, [data, appliedFilters, comparisonMode, comparePeriodAFrom, comparePeriodATo, comparePeriodBFrom, comparePeriodBTo]);
+        return [accA, accB, diff];
+      // ▼ 変更：依存配列を各ステートに戻す
+      }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown, comparisonMode, comparePeriodAFrom, comparePeriodATo, comparePeriodBFrom, comparePeriodBTo]);
 
       const allStatItems = [
         { id: 'count', title: '該当件数', value: totals.count, unit: '件', icon: <Briefcase size={14} className="text-sky-500 drop-shadow-sm" />, decimalPlaces: 0 },
@@ -924,8 +913,7 @@
         const separator = '\t';
         const newline = '\n';
 
-        const { freeWord, location, searchMode, selectedJobTitles } = appliedFilters;
-
+        // ▼ 変更：現在のステートを使用
         const combinedKeywordsStr = [freeWord, ...selectedJobTitles].filter(Boolean).join(' OR ');
 
         const headers = ['検索キーワード', '勤務地'];
@@ -989,11 +977,7 @@
 
       const totalTableWidth = 200 + 140 + statItems.length * 140;
 
-      const displayFreeWord = appliedFilters.freeWord;
-      const displayLocation = appliedFilters.location;
-      const displaySearchMode = appliedFilters.searchMode;
-      const displaySelectedJobTitles = appliedFilters.selectedJobTitles;
-      const displayCombinedKeywordsStr = [displayFreeWord, ...displaySelectedJobTitles].filter(Boolean).join(' OR ');
+      // ▼ 削除：表示用の displayXXX 変数を削除し、元のステートを直接使用する形に戻しました
 
       if (loading) {
         return (
@@ -1264,18 +1248,7 @@
                     </p>
                   </div>
 
-                  <button
-                    onClick={handleApplyFilters}
-                    className={`flex-shrink-0 px-8 py-3.5 rounded-2xl font-bold text-base transition-all flex items-center gap-2 ${
-                      hasUnappliedChanges
-                        ? 'bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-[0_6px_0_0_#9f1239] hover:brightness-110 active:shadow-none active:translate-y-[6px]'
-                        : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-[0_6px_0_0_#d6d3d1]'
-                    }`}
-                    disabled={!hasUnappliedChanges}
-                  >
-                    <PlayCircle size={20} className={hasUnappliedChanges ? "animate-pulse" : ""} />
-                    {hasUnappliedChanges ? 'この条件で集計する' : '集計は最新です'}
-                  </button>
+                  {/* ▼ 削除：「この条件で集計する」ボタンを削除しました */}
                 </div>
               </div>
 
@@ -1287,9 +1260,10 @@
                     <div className="flex flex-col sm:flex-row sm:items-center gap-5">
                       <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2 whitespace-nowrap drop-shadow-sm">
                         <Activity size={28} className="text-rose-400 drop-shadow-sm" /> 集計結果
-                        {hasUnappliedChanges && (
-                          <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 border-2 border-amber-200 px-3 py-1.5 rounded-xl ml-2 shadow-inner">
-                            <AlertCircle size={14} /> 条件が変更されています
+                        {/* ▼ 変更：「条件変更アラート」から「計算待ち...」インジケーターに戻しました */}
+                        {isCalculating && (
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-rose-600 bg-rose-50 border-2 border-rose-200 px-3 py-1.5 rounded-xl ml-2 shadow-inner">
+                            <Loader2 className="animate-spin" size={14} /> 計算待ち...
                           </span>
                         )}
                       </h2>
@@ -1555,21 +1529,21 @@
                             style={KEYWORD_STYLE}
                             title={
                               comparisonMode === 'prefecture' || comparisonMode === 'period'
-                                ? displayCombinedKeywordsStr || '（指定なし）'
-                                : displayFreeWord || '（指定なし）'
+                                ? [freeWord, ...selectedJobTitles].filter(Boolean).join(' OR ') || '（指定なし）'
+                                : freeWord || '（指定なし）'
                             }
                           >
                             {comparisonMode === 'prefecture' || comparisonMode === 'period'
-                              ? renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, 'sky')
-                              : renderSearchConditions(displayFreeWord, displaySearchMode, 'sky', '（指定なし）')
+                              ? renderCombinedKeywords(freeWord, selectedJobTitles, searchMode, 'sky')
+                              : renderSearchConditions(freeWord, searchMode, 'sky', '（指定なし）')
                             }
                           </td>
                           <td 
                             className="sticky left-[200px] z-30 py-2 px-3 font-bold text-sm text-sky-900 bg-sky-50 table-cell-border-sky whitespace-nowrap" 
                             style={PREF_STYLE}
-                            title={displayLocation || '（全国）'}
+                            title={location || '（全国）'}
                           >
-                            {renderSearchConditions(displayLocation, displaySearchMode, 'sky', '（全国）')}
+                            {renderSearchConditions(location, searchMode, 'sky', '（全国）')}
                           </td>
                           {statItems.map((item) => {
                             const isNull = item.value === null;
@@ -1617,8 +1591,8 @@
                                   <span className="text-stone-400 font-bold text-xs ml-1">{result.suffix}</span>
                                 )}
                               </td>
-                              <td className="sticky left-[200px] z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={PREF_STYLE} title={displayLocation || '（全国）'}>
-                                {renderSearchConditions(displayLocation, displaySearchMode, 'stone', '（全国）')}
+                              <td className="sticky left-[200px] z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={PREF_STYLE} title={location || '（全国）'}>
+                                {renderSearchConditions(location, searchMode, 'stone', '（全国）')}
                               </td>
                               {statItems.map((item) => {
                                 const val = result[item.id];
@@ -1655,12 +1629,12 @@
                             const shortPref = result.prefecture === '北海道' ? '北海道' : result.prefecture.replace(/[都府県]$/, '');
                             
                             let isHighlighted = false;
-                            if (displayLocation) {
+                            if (location) {
                               if (result.prefecture === '京都府') {
-                                const locWithoutTokyo = displayLocation.replace(/東京都?/g, '');
+                                const locWithoutTokyo = location.replace(/東京都?/g, '');
                                 isHighlighted = locWithoutTokyo.includes('京都');
                               } else {
-                                isHighlighted = displayLocation.includes(shortPref);
+                                isHighlighted = location.includes(shortPref);
                               }
                             }
                             
@@ -1674,9 +1648,9 @@
                                 <td 
                                   className={`sticky left-0 z-10 py-1 px-3 text-sm font-bold transition-colors truncate leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`}
                                   style={KEYWORD_STYLE}
-                                  title={displayCombinedKeywordsStr || '（指定なし）'}
+                                  title={[freeWord, ...selectedJobTitles].filter(Boolean).join(' OR ') || '（指定なし）'}
                                 >
-                                  {renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, isHighlighted ? 'emerald' : 'stone')}
+                                  {renderCombinedKeywords(freeWord, selectedJobTitles, searchMode, isHighlighted ? 'emerald' : 'stone')}
                                 </td>
                                 <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
                                   <div className="flex items-center gap-2">
@@ -1739,7 +1713,7 @@
                                   {result.label}
                                 </td>
                                 <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isDiff ? 'text-indigo-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
-                                  {renderSearchConditions(displayLocation, displaySearchMode, isDiff ? 'sky' : 'stone', '（全国）')}
+                                  {renderSearchConditions(location, searchMode, isDiff ? 'sky' : 'stone', '（全国）')}
                                 </td>
                                 {statItems.map((item) => {
                                   const val = result[item.id];
