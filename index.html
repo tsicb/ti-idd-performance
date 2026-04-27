@@ -1,1618 +1,1582 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天市×indeedPLUS運用実績</title>
 
-// --- 1. アイコンコンポーネント ---
-const Search = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
-const MapPin = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
-const Briefcase = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
-const Eye = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
-const MousePointer = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>;
-const PlayCircle = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>;
-const Users = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-const Loader2 = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
-const AlertCircle = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
-const DollarSign = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
-const Activity = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
-const TrendingUp = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
-const Target = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
-const Coins = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.66-.36a2 2 0 0 0 .88-2.51l-.42-.94a2 2 0 0 0-2.51-.88l-.66.36a2 2 0 0 0-.88 2.51l.42.94a2 2 0 0 0 2.51.88z"/></svg>;
-const CreditCard = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-const Tag = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
-const Sparkles = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"/></svg>;
-const ChevronDown = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>;
-const FolderOpen = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="2" y1="13" x2="22" y2="13"/></svg>;
-const Filter = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>;
-const Columns = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/></svg>;
-const Check = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
-const Copy = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
-const Calendar = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-
-const BarChartIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 drop-shadow-sm">
-    <path d="M3 3v18h18"/>
-    <path d="M18 17V9"/>
-    <path d="M13 17V5"/>
-    <path d="M8 17v-3"/>
-  </svg>
-);
-
-// --- 2. ユーティリティ関数とデータ ---
-function parseCSV(text) {
-  const lines = [];
-  let currentLine = [];
-  let currentCell = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (i + 1 < text.length && text[i + 1] === '"') {
-          currentCell += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        currentCell += c;
-      }
-    } else {
-      if (c === '"') {
-        inQuotes = true;
-      } else if (c === ',') {
-        currentLine.push(currentCell);
-        currentCell = '';
-      } else if (c === '\n' || c === '\r') {
-        currentLine.push(currentCell);
-        lines.push(currentLine);
-        currentLine = [];
-        currentCell = '';
-        if (c === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
-          i++;
-        }
-      } else {
-        currentCell += c;
-      }
-    }
-  }
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  if (currentCell || text[text.length - 1] === ',') {
-    currentLine.push(currentCell);
-  }
-  if (currentLine.length > 0) {
-    lines.push(currentLine);
-  }
-
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0];
-  const data = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].length === 1 && lines[i][0] === "") continue;
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = lines[i][index] || "";
-    });
-    data.push(obj);
-  }
-  return data;
-}
-
-const parseNum = (str) => {
-  if (!str) return 0;
-  const num = parseFloat(String(str).replace(/[^0-9.-]+/g, ""));
-  return isNaN(num) ? 0 : num;
-};
-
-const CATEGORIES = [
-  '事務・オフィス系', '営業職', 'ドライバー・物流・運送', '製造・工場・軽作業',
-  '接客・販売・サービス', '飲食関連（調理・食品）', 'イベント・催事・アミューズメント',
-  'クリエイティブ・企画・マーケティング', '清掃・警備・管理', '建築・土木・設備',
-  '医療・介護・福祉', '専門職・技術職', '教育・保育・指導', 'その他・未分類'
-];
-
-const PREFECTURES = [
-  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
-  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
-  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-];
-
-const KEYWORD_STYLE = { width: '200px', minWidth: '200px', maxWidth: '200px' };
-const PREF_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
-const STAT_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
-
-const CACHE_KEY = 'indeed_plus_csv_data';
-
-// --- 3. メインのアプリケーションコンポーネント ---
-export default function App() {
-  // カスタムCSSの動的挿入
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
-      
-      .custom-scrollbar::-webkit-scrollbar { height: 24px; width: 12px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: #f5f5f4; border-radius: 9999px; box-shadow: inset 0 4px 6px rgba(0,0,0,0.05); }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #d6d3d1, #a8a29e); border-radius: 9999px; border: 3px solid #f5f5f4; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #a8a29e, #78716c); }
-      
-      .custom-scrollbar-hide::-webkit-scrollbar { display: none; }
-      .custom-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-      .table-cell-border { border-right: 2px solid #f5f5f4; border-bottom: 2px solid #f5f5f4; }
-      .table-cell-border-sky { border-right: 2px solid #bae6fd; border-bottom: 2px solid #bae6fd; }
-      .table-cell-border-emerald { border-right: 2px solid #a7f3d0; border-bottom: 2px solid #a7f3d0; }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  const [freeWordInput, setFreeWordInput] = useState('');
-  const [locationInput, setLocationInput] = useState('');
-
-  const [freeWord, setFreeWord] = useState('');
-  const [location, setLocation] = useState('');
-
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [campaignFilter, setCampaignFilter] = useState('all');
-  const [comparisonMode, setComparisonMode] = useState('job');
-  const [searchMode, setSearchMode] = useState('OR');
-
-  const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState(['count', 'cost', 'clicks', 'applies', 'cvr', 'cpc', 'cpa']);
-  
-  const [isCopied, setIsCopied] = useState(false);
-  const [showOnlyCpa, setShowOnlyCpa] = useState(false);
-
-  const [selectedJobTitles, setSelectedJobTitles] = useState([]);
-
-  const [periodFrom, setPeriodFrom] = useState('');
-  const [periodTo, setPeriodTo] = useState('');
-  const [includeUnknown, setIncludeUnknown] = useState(true);
-
-  const [comparePeriodAFrom, setComparePeriodAFrom] = useState('');
-  const [comparePeriodATo, setComparePeriodATo] = useState('');
-  const [comparePeriodBFrom, setComparePeriodBFrom] = useState('');
-  const [comparePeriodBTo, setComparePeriodBTo] = useState('');
-
-  // ▼ 追加：集計に適用する「確定済み」の検索条件ステート
-  const [appliedFilters, setAppliedFilters] = useState({
-    freeWord: '', location: '', categoryFilter: '', campaignFilter: 'all', searchMode: 'OR',
-    selectedJobTitles: [], periodFrom: '', periodTo: '', includeUnknown: true
-  });
-
-  const dropdownRef = useRef(null);
-  
-  const headerScrollRef = useRef(null);
-  const bodyScrollRef = useRef(null);
-  const dummyScrollRef = useRef(null);
-
-  const handleScroll = (e) => {
-    const scrollLeft = e.target.scrollLeft;
-    if (headerScrollRef.current && headerScrollRef.current !== e.target) {
-      headerScrollRef.current.scrollLeft = scrollLeft;
-    }
-    if (bodyScrollRef.current && bodyScrollRef.current !== e.target) {
-      bodyScrollRef.current.scrollLeft = scrollLeft;
-    }
-    if (dummyScrollRef.current && dummyScrollRef.current !== e.target) {
-      dummyScrollRef.current.scrollLeft = scrollLeft;
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsColumnDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFreeWord(freeWordInput);
-      setLocation(locationInput);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [freeWordInput, locationInput]);
-
-  const isCalculating = freeWordInput !== freeWord || locationInput !== location;
-
-  useEffect(() => {
-    setSelectedJobTitles([]);
-  }, [freeWord]);
-
-  // ▼ 追加：適用されていない変更があるかどうかを判定
-  const hasUnappliedChanges = 
-    freeWord !== appliedFilters.freeWord ||
-    location !== appliedFilters.location ||
-    categoryFilter !== appliedFilters.categoryFilter ||
-    campaignFilter !== appliedFilters.campaignFilter ||
-    searchMode !== appliedFilters.searchMode ||
-    JSON.stringify(selectedJobTitles) !== JSON.stringify(appliedFilters.selectedJobTitles) ||
-    periodFrom !== appliedFilters.periodFrom ||
-    periodTo !== appliedFilters.periodTo ||
-    includeUnknown !== appliedFilters.includeUnknown;
-
-  // ▼ 追加：ボタン押下時に現在の条件を「確定済み」として保存する関数
-  const handleApplyFilters = () => {
-    setAppliedFilters({
-      freeWord, location, categoryFilter, campaignFilter, searchMode,
-      selectedJobTitles, periodFrom, periodTo, includeUnknown
-    });
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      let cachedText = null;
-      
-      try {
-        // 環境対応のため localforage の代わりに標準の localStorage を使用
-        cachedText = window.localStorage.getItem(CACHE_KEY);
-        if (cachedText) {
-          const parsedData = parseCSV(cachedText);
-          setData(parsedData);
-          setLoading(false);
-        }
-      } catch (e) {
-        console.warn("キャッシュの読み込みに失敗しました:", e);
-      }
-
-      try {
-        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSiVeQSkfiHCujV6SG1q5UQwyMAxnEDVaUD8mwdPK8q3rXCsh_XDIR9fYwHmhknfrv_a3mxebwH28HB/pub?gid=0&single=true&output=csv';
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error('ネットワークエラーにより最新データの取得に失敗しました。');
-        }
-        
-        const csvText = await response.text();
-        
-        if (cachedText === csvText) {
-          return; 
-        }
-        
-        try {
-          window.localStorage.setItem(CACHE_KEY, csvText);
-        } catch (e) {
-          console.warn("キャッシュの保存に失敗しました:", e);
-        }
-
-        const parsedData = parseCSV(csvText);
-        setData(parsedData);
-        setLoading(false);
-        setError(null);
-        
-      } catch (err) {
-        if (!cachedText) {
-          setError(err.message);
-          setLoading(false);
-        }
-        console.error('Fetch error:', err);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const splitKeywords = (text) => {
-    if (!text) return [];
-    return text.split(/[\s　]+/).filter(k => k.length > 0);
-  };
-
-  const renderSearchConditions = (text, mode, colorTheme = 'sky', fallback = '（指定なし）') => {
-    const keywords = splitKeywords(text);
-    if (keywords.length === 0) return fallback;
-    if (keywords.length === 1) return text; 
-    
-    const getBadgeStyle = () => {
-      if (mode === 'OR') return 'bg-orange-200 text-orange-800';
-      if (colorTheme === 'emerald') return 'bg-emerald-200/80 text-emerald-800';
-      if (colorTheme === 'stone') return 'bg-stone-200 text-stone-600';
-      return 'bg-sky-200/80 text-sky-800';
-    };
-
-    return (
-      <span className="inline-flex items-center gap-1 align-middle max-w-full">
-        {keywords.map((kw, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && (
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] font-black leading-none tracking-wider flex-shrink-0 ${getBadgeStyle()}`}>
-                {mode}
-              </span>
-            )}
-            <span className="truncate">{kw}</span>
-          </React.Fragment>
-        ))}
-      </span>
-    );
-  };
-
-  const renderCombinedKeywords = (freeW, selectedJobs, mode, colorTheme = 'sky', fallback = '（指定なし）') => {
-    const freeWordElem = freeW ? renderSearchConditions(freeW, mode, colorTheme) : null;
-    
-    if (selectedJobs.length === 0) {
-      return freeWordElem || fallback;
-    }
-
-    const firstKeywordElem = freeW ? freeWordElem : <span className="truncate">{selectedJobs[0]}</span>;
-    const remainingCount = freeW ? selectedJobs.length : selectedJobs.length - 1;
-
-    if (remainingCount === 0) {
-      return (
-        <span className="inline-flex items-center gap-1 align-middle max-w-full overflow-hidden">
-          {firstKeywordElem}
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1.5 align-middle max-w-full overflow-hidden">
-        <span className="flex-shrink flex items-center min-w-0">{firstKeywordElem}</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-bold leading-none flex-shrink-0 bg-stone-200/80 text-stone-600 border border-stone-300/50 shadow-sm">
-          +{remainingCount}
-        </span>
-      </span>
-    );
-  };
-
-  const extractYearMonth = (periodStr) => {
-    if (!periodStr) return null;
-    if (periodStr === '（不明）') return 'unknown';
-    const match = periodStr.match(/^(\d{4})(\d{2})\d{2}-/);
-    if (match) {
-      return `${match[1]}${match[2]}`;
-    }
-    return null;
-  };
-
-  const formatYearMonth = (ym) => {
-    if (!ym || ym.length !== 6) return ym;
-    return `${ym.slice(0, 4)}年${ym.slice(4, 6)}月`;
-  };
-
-  const checkPeriodMatch = (periodStr, from, to, incUnknown) => {
-    const ym = extractYearMonth(periodStr);
-    if (ym === 'unknown' || !ym) return incUnknown;
-    const isAfterFrom = from ? ym >= from : true;
-    const isBeforeTo = to ? ym <= to : true;
-    return isAfterFrom && isBeforeTo;
-  };
-
-  const availableYearMonths = useMemo(() => {
-    const ymSet = new Set();
-    data.forEach(row => {
-      const ym = extractYearMonth(row['集計期間']);
-      if (ym && ym !== 'unknown') {
-        ymSet.add(ym);
-      }
-    });
-    return Array.from(ymSet).sort();
-  }, [data]);
-
-  const relatedJobTitles = useMemo(() => {
-    if (!freeWord.trim()) return [];
-    
-    const freeWordKeywords = splitKeywords(freeWord);
-    const locationKeywords = splitKeywords(location);
-    
-    const filtered = data.filter(row => {
-      const jobName = row['職種名'] || "";
-      const matchFreeWord = freeWordKeywords.length === 0 ? true :
-        searchMode === 'AND'
-          ? freeWordKeywords.every(kw => jobName.includes(kw))
-          : freeWordKeywords.some(kw => jobName.includes(kw));
-
-      const loc = row['勤務地'] || "";
-      const matchLocation = locationKeywords.length === 0 ? true :
-        searchMode === 'AND'
-          ? locationKeywords.every(kw => loc.includes(kw))
-          : locationKeywords.some(kw => loc.includes(kw));
-
-      const campaign = row['キャンペーン'] || "";
-      const hasSA = campaign.includes("SA-");
-      let matchCampaign = true;
-      if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-      if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
-
-      let matchCategory = true;
-      if (categoryFilter) {
-        const rowCategory = row['職業カテゴリー'] || "";
-        const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-        matchCategory = categoriesInRow.includes(categoryFilter);
-      }
-
-      const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-
-      return matchFreeWord && matchLocation && matchCampaign && matchCategory && matchPeriod;
-    });
-
-    const jobSet = new Set();
-    filtered.forEach(row => {
-      const stdJob = row['標準化された職種名'] || "";
-      if (stdJob) {
-        const jobs = stdJob.split(',').map(j => j.trim()).filter(j => j.length > 0);
-        jobs.forEach(j => jobSet.add(j));
-      }
-    });
-
-    const exactMatchWord = freeWord.trim();
-    const candidateJobs = Array.from(jobSet).filter(job => job !== exactMatchWord);
-
-    const validJobs = candidateJobs.filter(job => {
-      const jobTokens = splitKeywords(job);
-      
-      return data.some(row => {
-        const jobName = row['職種名'] || "";
-        const matchFreeWord = jobTokens.length === 0 ? true :
-          searchMode === 'AND'
-            ? jobTokens.every(kw => jobName.includes(kw))
-            : jobTokens.some(kw => jobName.includes(kw));
-            
-        if (!matchFreeWord) return false;
-
-        const loc = row['勤務地'] || "";
-        const matchLocation = locationKeywords.length === 0 ? true :
-          searchMode === 'AND'
-            ? locationKeywords.every(kw => loc.includes(kw))
-            : locationKeywords.some(kw => loc.includes(kw));
-            
-        if (!matchLocation) return false;
-
-        const campaign = row['キャンペーン'] || "";
-        const hasSA = campaign.includes("SA-");
-        if (campaignFilter === 'sa-only' && !hasSA) return false;
-        if (campaignFilter === 'non-sa-only' && hasSA) return false;
-
-        if (categoryFilter) {
-          const rowCategory = row['職業カテゴリー'] || "";
-          const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-          if (!categoriesInRow.includes(categoryFilter)) return false;
-        }
-
-        const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-        if (!matchPeriod) return false;
-
-        return true;
-      });
-    });
-
-    return validJobs;
-  }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, periodFrom, periodTo, includeUnknown]);
-
-  const simulationKeywords = useMemo(() => {
-    return selectedJobTitles.map(job => ({ keyword: job, suffix: '' }));
-  }, [selectedJobTitles]);
-
-  const { filteredData, totals } = useMemo(() => {
-    // ▼ 変更：入力中の値ではなく、確定済みの appliedFilters を使用して集計する
-    const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-    
-    const freeWordKeywords = splitKeywords(freeWord);
-    const locationKeywords = splitKeywords(location);
-
-    const filtered = data.filter(row => {
-      const jobName = row['職種名'] || "";
-      
-      let matchJob = true;
-      
-      const matchFreeWord = freeWordKeywords.length > 0 ? (
-        searchMode === 'AND'
-          ? freeWordKeywords.every(kw => jobName.includes(kw))
-          : freeWordKeywords.some(kw => jobName.includes(kw))
-      ) : false;
-
-      if (comparisonMode === 'job') {
-        if (freeWordKeywords.length > 0) {
-          matchJob = matchFreeWord;
-        } else {
-          matchJob = true; 
-        }
-      } else {
-        if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
-          const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
-          matchJob = matchFreeWord || matchSelectedJobs;
-        }
-      }
-
-      const loc = row['勤務地'] || "";
-      const matchLocation = locationKeywords.length === 0 ? true :
-        searchMode === 'AND'
-          ? locationKeywords.every(kw => loc.includes(kw))
-          : locationKeywords.some(kw => loc.includes(kw));
-
-      const campaign = row['キャンペーン'] || "";
-      const hasSA = campaign.includes("SA-");
-      let matchCampaign = true;
-      if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-      if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
-
-      let matchCategory = true;
-      if (categoryFilter) {
-        const rowCategory = row['職業カテゴリー'] || "";
-        const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-        matchCategory = categoriesInRow.includes(categoryFilter);
-      }
-
-      const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-
-      return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
-    });
-
-    const calcTotals = {
-      count: filtered.length,
-      cost: 0,
-      impressions: 0,
-      clicks: 0,
-      applyStarts: 0,
-      applies: 0
-    };
-
-    filtered.forEach(row => {
-      calcTotals.cost += parseNum(row['消化金額']);
-      calcTotals.impressions += parseNum(row['表示回数']);
-      calcTotals.clicks += parseNum(row['クリック数']);
-      calcTotals.applyStarts += parseNum(row['応募開始数']);
-      calcTotals.applies += parseNum(row['応募数']);
-    });
-
-    calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-    calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-    calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-    calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-    calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
-
-    return { filteredData: filtered, totals: calcTotals };
-  // ▼ 変更：依存配列を appliedFilters に変更
-  }, [data, appliedFilters, comparisonMode]);
-
-  const simulationResults = useMemo(() => {
-    // ▼ 変更：確定済みの条件から simulationKeywords も生成し直す
-    const { location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-    const targetKeywords = selectedJobTitles.map(job => ({ keyword: job, suffix: '' }));
-
-    if (targetKeywords.length === 0) return [];
-
-    const locationKeywords = splitKeywords(location);
-    const results = [];
-
-    targetKeywords.forEach(({ keyword, suffix }) => {
-      const keywordTokens = splitKeywords(keyword);
-      
-      const filtered = data.filter(row => {
-        const jobName = row['職種名'] || "";
-        const matchFreeWord = keywordTokens.length === 0 ? true :
-          searchMode === 'AND'
-            ? keywordTokens.every(kw => jobName.includes(kw))
-            : keywordTokens.some(kw => jobName.includes(kw));
-
-        const loc = row['勤務地'] || "";
-        const matchLocation = locationKeywords.length === 0 ? true :
-          searchMode === 'AND'
-            ? locationKeywords.every(kw => loc.includes(kw))
-            : locationKeywords.some(kw => loc.includes(kw));
-
-        const campaign = row['キャンペーン'] || "";
-        const hasSA = campaign.includes("SA-");
-        let matchCampaign = true;
-        if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-        if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
-
-        let matchCategory = true;
-        if (categoryFilter) {
-          const rowCategory = row['職業カテゴリー'] || "";
-          const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-          matchCategory = categoriesInRow.includes(categoryFilter);
-        }
-
-        const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-
-        return matchFreeWord && matchLocation && matchCampaign && matchCategory && matchPeriod;
-      });
-
-      if (filtered.length > 0) {
-        const calcTotals = {
-          keyword: keyword,
-          suffix: suffix,
-          count: filtered.length,
-          cost: 0,
-          impressions: 0,
-          clicks: 0,
-          applyStarts: 0,
-          applies: 0
-        };
-
-        filtered.forEach(row => {
-          calcTotals.cost += parseNum(row['消化金額']);
-          calcTotals.impressions += parseNum(row['表示回数']);
-          calcTotals.clicks += parseNum(row['クリック数']);
-          calcTotals.applyStarts += parseNum(row['応募開始数']);
-          calcTotals.applies += parseNum(row['応募数']);
-        });
-
-        calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-        calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-        calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-        calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-        calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
-
-        results.push(calcTotals);
-      }
-    });
-
-    return results.sort((a, b) => b.count - a.count);
-  // ▼ 変更：依存配列を appliedFilters に変更
-  }, [data, appliedFilters]);
-
-  const prefectureResults = useMemo(() => {
-    if (comparisonMode !== 'prefecture') return [];
-
-    // ▼ 変更：確定済みの条件を使用
-    const { freeWord, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
-
-    const freeWordKeywords = splitKeywords(freeWord);
-    const results = [];
-
-    PREFECTURES.forEach(pref => {
-      const filtered = data.filter(row => {
-        const jobName = row['職種名'] || "";
-        
-        let matchJob = true;
-        if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
-          const matchFreeWord = freeWordKeywords.length > 0 ? (
-            searchMode === 'AND'
-              ? freeWordKeywords.every(kw => jobName.includes(kw))
-              : freeWordKeywords.some(kw => jobName.includes(kw))
-          ) : false;
-          
-          const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
-          
-          matchJob = matchFreeWord || matchSelectedJobs;
-        }
-
-        const loc = row['勤務地'] || "";
-        const matchLocation = loc.includes(pref);
-
-        const campaign = row['キャンペーン'] || "";
-        const hasSA = campaign.includes("SA-");
-        let matchCampaign = true;
-        if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-        if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
-
-        let matchCategory = true;
-        if (categoryFilter) {
-          const rowCategory = row['職業カテゴリー'] || "";
-          const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-          matchCategory = categoriesInRow.includes(categoryFilter);
-        }
-
-        const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
-
-        return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
-      });
-
-      if (filtered.length > 0) {
-        const calcTotals = {
-          prefecture: pref,
-          count: filtered.length,
-          cost: 0,
-          impressions: 0,
-          clicks: 0,
-          applyStarts: 0,
-          applies: 0
-        };
-
-        filtered.forEach(row => {
-          calcTotals.cost += parseNum(row['消化金額']);
-          calcTotals.impressions += parseNum(row['表示回数']);
-          calcTotals.clicks += parseNum(row['クリック数']);
-          calcTotals.applyStarts += parseNum(row['応募開始数']);
-          calcTotals.applies += parseNum(row['応募数']);
-        });
-
-        calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-        calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-        calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-        calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-        calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
-
-        if (calcTotals.count >= 1) {
-          if (showOnlyCpa && (calcTotals.cpa === null || calcTotals.cpa < 1)) {
-            // 何もしない
-          } else {
-            results.push(calcTotals);
+  <!-- Babel (ブラウザ上でJSXをコンパイルするために必要) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Zen Maru Gothic"', 'sans-serif'],
           }
         }
       }
-    });
+    }
+  </script>
 
-    return results.sort((a, b) => {
-      if (a.cpa === null && b.cpa === null) {
-        if (a.cpc === null && b.cpc === null) {
-          return b.count - a.count;
+  <!-- カスタムスタイル -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #fef3c7 0%, #ffedd5 50%, #fef9c3 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { height: 24px; width: 12px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f5f5f4; border-radius: 9999px; box-shadow: inset 0 4px 6px rgba(0,0,0,0.05); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #d6d3d1, #a8a29e); border-radius: 9999px; border: 3px solid #f5f5f4; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #a8a29e, #78716c); }
+    
+    .custom-scrollbar-hide::-webkit-scrollbar { display: none; }
+    .custom-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .table-cell-border { border-right: 2px solid #f5f5f4; border-bottom: 2px solid #f5f5f4; }
+    .table-cell-border-sky { border-right: 2px solid #bae6fd; border-bottom: 2px solid #bae6fd; }
+    .table-cell-border-emerald { border-right: 2px solid #a7f3d0; border-bottom: 2px solid #a7f3d0; }
+  </style>
+</head>
+<body>
+  <!-- Reactアプリのマウントポイント -->
+  <div id="root"></div>
+
+  <!-- Reactアプリのコード -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- 1. アイコンコンポーネント ---
+    const Search = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+    const MapPin = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+    const Briefcase = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
+    const Eye = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+    const MousePointer = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>;
+    const PlayCircle = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>;
+    const Users = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+    const Loader2 = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
+    const AlertCircle = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+    const DollarSign = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
+    const Activity = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+    const TrendingUp = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
+    const Target = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+    const Coins = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.66-.36a2 2 0 0 0 .88-2.51l-.42-.94a2 2 0 0 0-2.51-.88l-.66.36a2 2 0 0 0-.88 2.51l.42.94a2 2 0 0 0 2.51.88z"/></svg>;
+    const CreditCard = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
+    const Tag = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
+    const Sparkles = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"/></svg>;
+    const ChevronDown = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>;
+    const FolderOpen = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="2" y1="13" x2="22" y2="13"/></svg>;
+    const Filter = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>;
+    const Columns = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/></svg>;
+    const Check = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
+    const Copy = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
+    const Calendar = ({size=24,className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+
+    const BarChartIcon = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 drop-shadow-sm">
+        <path d="M3 3v18h18"/>
+        <path d="M18 17V9"/>
+        <path d="M13 17V5"/>
+        <path d="M8 17v-3"/>
+      </svg>
+    );
+
+    // --- 2. ユーティリティ関数とデータ ---
+    function parseCSV(text) {
+      const lines = [];
+      let currentLine = [];
+      let currentCell = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (i + 1 < text.length && text[i + 1] === '"') {
+              currentCell += '"';
+              i++;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            currentCell += c;
+          }
+        } else {
+          if (c === '"') {
+            inQuotes = true;
+          } else if (c === ',') {
+            currentLine.push(currentCell);
+            currentCell = '';
+          } else if (c === '\n' || c === '\r') {
+            currentLine.push(currentCell);
+            lines.push(currentLine);
+            currentLine = [];
+            currentCell = '';
+            if (c === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
+              i++;
+            }
+          } else {
+            currentCell += c;
+          }
         }
-        if (a.cpc === null) return 1;
-        if (b.cpc === null) return -1;
-        return a.cpc - b.cpc;
       }
       
-      if (a.cpa === null) return 1;
-      if (b.cpa === null) return -1;
-      return a.cpa - b.cpa;
-    });
-  // ▼ 変更：依存配列を appliedFilters に変更
-  }, [data, appliedFilters, comparisonMode, showOnlyCpa]);
+      if (currentCell || text[text.length - 1] === ',') {
+        currentLine.push(currentCell);
+      }
+      if (currentLine.length > 0) {
+        lines.push(currentLine);
+      }
 
-  const periodResults = useMemo(() => {
-    if (comparisonMode !== 'period') return [];
+      if (lines.length === 0) return [];
+      
+      const headers = lines[0];
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].length === 1 && lines[i][0] === "") continue;
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = lines[i][index] || "";
+        });
+        data.push(obj);
+      }
+      return data;
+    }
 
-    // ▼ 変更：確定済みの条件を使用
-    const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles } = appliedFilters;
+    const parseNum = (str) => {
+      if (!str) return 0;
+      const num = parseFloat(String(str).replace(/[^0-9.-]+/g, ""));
+      return isNaN(num) ? 0 : num;
+    };
 
-    const freeWordKeywords = splitKeywords(freeWord);
-    const locationKeywords = splitKeywords(location);
+    const CATEGORIES = [
+      '事務・オフィス系', '営業職', 'ドライバー・物流・運送', '製造・工場・軽作業',
+      '接客・販売・サービス', '飲食関連（調理・食品）', 'イベント・催事・アミューズメント',
+      'クリエイティブ・企画・マーケティング', '清掃・警備・管理', '建築・土木・設備',
+      '医療・介護・福祉', '専門職・技術職', '教育・保育・指導', 'その他・未分類'
+    ];
 
-    const calcForPeriod = (from, to, labelStr) => {
-      const filtered = data.filter(row => {
-        const jobName = row['職種名'] || "";
-        let matchJob = true;
-        if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
+    const PREFECTURES = [
+      '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+      '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+      '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+      '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+      '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+    ];
+
+    const KEYWORD_STYLE = { width: '200px', minWidth: '200px', maxWidth: '200px' };
+    const PREF_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
+    const STAT_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
+
+    const CACHE_KEY = 'indeed_plus_csv_data';
+
+    // --- 3. メインのアプリケーションコンポーネント ---
+    function App() {
+      const [data, setData] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      
+      const [freeWordInput, setFreeWordInput] = useState('');
+      const [locationInput, setLocationInput] = useState('');
+
+      const [freeWord, setFreeWord] = useState('');
+      const [location, setLocation] = useState('');
+
+      const [categoryFilter, setCategoryFilter] = useState('');
+      const [campaignFilter, setCampaignFilter] = useState('all');
+      const [comparisonMode, setComparisonMode] = useState('job');
+      const [searchMode, setSearchMode] = useState('OR');
+
+      const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
+      const [visibleColumns, setVisibleColumns] = useState(['count', 'cost', 'clicks', 'applies', 'cvr', 'cpc', 'cpa']);
+      
+      const [isCopied, setIsCopied] = useState(false);
+      const [showOnlyCpa, setShowOnlyCpa] = useState(false);
+
+      const [selectedJobTitles, setSelectedJobTitles] = useState([]);
+
+      const [periodFrom, setPeriodFrom] = useState('');
+      const [periodTo, setPeriodTo] = useState('');
+      const [includeUnknown, setIncludeUnknown] = useState(true);
+
+      const [comparePeriodAFrom, setComparePeriodAFrom] = useState('');
+      const [comparePeriodATo, setComparePeriodATo] = useState('');
+      const [comparePeriodBFrom, setComparePeriodBFrom] = useState('');
+      const [comparePeriodBTo, setComparePeriodBTo] = useState('');
+
+      const [appliedFilters, setAppliedFilters] = useState({
+        freeWord: '', location: '', categoryFilter: '', campaignFilter: 'all', searchMode: 'OR',
+        selectedJobTitles: [], periodFrom: '', periodTo: '', includeUnknown: true
+      });
+
+      const dropdownRef = useRef(null);
+      
+      const headerScrollRef = useRef(null);
+      const bodyScrollRef = useRef(null);
+      const dummyScrollRef = useRef(null);
+
+      const handleScroll = (e) => {
+        const scrollLeft = e.target.scrollLeft;
+        if (headerScrollRef.current && headerScrollRef.current !== e.target) {
+          headerScrollRef.current.scrollLeft = scrollLeft;
+        }
+        if (bodyScrollRef.current && bodyScrollRef.current !== e.target) {
+          bodyScrollRef.current.scrollLeft = scrollLeft;
+        }
+        if (dummyScrollRef.current && dummyScrollRef.current !== e.target) {
+          dummyScrollRef.current.scrollLeft = scrollLeft;
+        }
+      };
+
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setIsColumnDropdownOpen(false);
+          }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+        };
+      }, []);
+
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          setFreeWord(freeWordInput);
+          setLocation(locationInput);
+        }, 500);
+        return () => clearTimeout(timer);
+      }, [freeWordInput, locationInput]);
+
+      const isCalculating = freeWordInput !== freeWord || locationInput !== location;
+
+      useEffect(() => {
+        setSelectedJobTitles([]);
+      }, [freeWord]);
+
+      const hasUnappliedChanges = 
+        freeWord !== appliedFilters.freeWord ||
+        location !== appliedFilters.location ||
+        categoryFilter !== appliedFilters.categoryFilter ||
+        campaignFilter !== appliedFilters.campaignFilter ||
+        searchMode !== appliedFilters.searchMode ||
+        JSON.stringify(selectedJobTitles) !== JSON.stringify(appliedFilters.selectedJobTitles) ||
+        periodFrom !== appliedFilters.periodFrom ||
+        periodTo !== appliedFilters.periodTo ||
+        includeUnknown !== appliedFilters.includeUnknown;
+
+      const handleApplyFilters = () => {
+        setAppliedFilters({
+          freeWord, location, categoryFilter, campaignFilter, searchMode,
+          selectedJobTitles, periodFrom, periodTo, includeUnknown
+        });
+      };
+
+      useEffect(() => {
+        const fetchData = async () => {
+          let cachedText = null;
+          
+          try {
+            cachedText = window.localStorage.getItem(CACHE_KEY);
+            if (cachedText) {
+              const parsedData = parseCSV(cachedText);
+              setData(parsedData);
+              setLoading(false);
+            }
+          } catch (e) {
+            console.warn("キャッシュの読み込みに失敗しました:", e);
+          }
+
+          try {
+            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSiVeQSkfiHCujV6SG1q5UQwyMAxnEDVaUD8mwdPK8q3rXCsh_XDIR9fYwHmhknfrv_a3mxebwH28HB/pub?gid=0&single=true&output=csv';
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+              throw new Error('ネットワークエラーにより最新データの取得に失敗しました。');
+            }
+            
+            const csvText = await response.text();
+            
+            if (cachedText === csvText) {
+              return; 
+            }
+            
+            try {
+              window.localStorage.setItem(CACHE_KEY, csvText);
+            } catch (e) {
+              console.warn("キャッシュの保存に失敗しました:", e);
+            }
+
+            const parsedData = parseCSV(csvText);
+            setData(parsedData);
+            setLoading(false);
+            setError(null);
+            
+          } catch (err) {
+            if (!cachedText) {
+              setError(err.message);
+              setLoading(false);
+            }
+            console.error('Fetch error:', err);
+          }
+        };
+
+        fetchData();
+      }, []);
+
+      const splitKeywords = (text) => {
+        if (!text) return [];
+        return text.split(/[\s　]+/).filter(k => k.length > 0);
+      };
+
+      const renderSearchConditions = (text, mode, colorTheme = 'sky', fallback = '（指定なし）') => {
+        const keywords = splitKeywords(text);
+        if (keywords.length === 0) return fallback;
+        if (keywords.length === 1) return text; 
+        
+        const getBadgeStyle = () => {
+          if (mode === 'OR') return 'bg-orange-200 text-orange-800';
+          if (colorTheme === 'emerald') return 'bg-emerald-200/80 text-emerald-800';
+          if (colorTheme === 'stone') return 'bg-stone-200 text-stone-600';
+          return 'bg-sky-200/80 text-sky-800';
+        };
+
+        return (
+          <span className="inline-flex items-center gap-1 align-middle max-w-full">
+            {keywords.map((kw, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && (
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] font-black leading-none tracking-wider flex-shrink-0 ${getBadgeStyle()}`}>
+                    {mode}
+                  </span>
+                )}
+                <span className="truncate">{kw}</span>
+              </React.Fragment>
+            ))}
+          </span>
+        );
+      };
+
+      const renderCombinedKeywords = (freeW, selectedJobs, mode, colorTheme = 'sky', fallback = '（指定なし）') => {
+        const freeWordElem = freeW ? renderSearchConditions(freeW, mode, colorTheme) : null;
+        
+        if (selectedJobs.length === 0) {
+          return freeWordElem || fallback;
+        }
+
+        const firstKeywordElem = freeW ? freeWordElem : <span className="truncate">{selectedJobs[0]}</span>;
+        const remainingCount = freeW ? selectedJobs.length : selectedJobs.length - 1;
+
+        if (remainingCount === 0) {
+          return (
+            <span className="inline-flex items-center gap-1 align-middle max-w-full overflow-hidden">
+              {firstKeywordElem}
+            </span>
+          );
+        }
+
+        return (
+          <span className="inline-flex items-center gap-1.5 align-middle max-w-full overflow-hidden">
+            <span className="flex-shrink flex items-center min-w-0">{firstKeywordElem}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-bold leading-none flex-shrink-0 bg-stone-200/80 text-stone-600 border border-stone-300/50 shadow-sm">
+              +{remainingCount}
+            </span>
+          </span>
+        );
+      };
+
+      const extractYearMonth = (periodStr) => {
+        if (!periodStr) return null;
+        if (periodStr === '（不明）') return 'unknown';
+        const match = periodStr.match(/^(\d{4})(\d{2})\d{2}-/);
+        if (match) {
+          return `${match[1]}${match[2]}`;
+        }
+        return null;
+      };
+
+      const formatYearMonth = (ym) => {
+        if (!ym || ym.length !== 6) return ym;
+        return `${ym.slice(0, 4)}年${ym.slice(4, 6)}月`;
+      };
+
+      const checkPeriodMatch = (periodStr, from, to, incUnknown) => {
+        const ym = extractYearMonth(periodStr);
+        if (ym === 'unknown' || !ym) return incUnknown;
+        const isAfterFrom = from ? ym >= from : true;
+        const isBeforeTo = to ? ym <= to : true;
+        return isAfterFrom && isBeforeTo;
+      };
+
+      const availableYearMonths = useMemo(() => {
+        const ymSet = new Set();
+        data.forEach(row => {
+          const ym = extractYearMonth(row['集計期間']);
+          if (ym && ym !== 'unknown') {
+            ymSet.add(ym);
+          }
+        });
+        return Array.from(ymSet).sort();
+      }, [data]);
+
+      const relatedJobTitles = useMemo(() => {
+        if (!freeWord.trim()) return [];
+        
+        const freeWordKeywords = splitKeywords(freeWord);
+        const locationKeywords = splitKeywords(location);
+        
+        const filtered = data.filter(row => {
+          const jobName = row['職種名'] || "";
+          const matchFreeWord = freeWordKeywords.length === 0 ? true :
+            searchMode === 'AND'
+              ? freeWordKeywords.every(kw => jobName.includes(kw))
+              : freeWordKeywords.some(kw => jobName.includes(kw));
+
+          const loc = row['勤務地'] || "";
+          const matchLocation = locationKeywords.length === 0 ? true :
+            searchMode === 'AND'
+              ? locationKeywords.every(kw => loc.includes(kw))
+              : locationKeywords.some(kw => loc.includes(kw));
+
+          const campaign = row['キャンペーン'] || "";
+          const hasSA = campaign.includes("SA-");
+          let matchCampaign = true;
+          if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
+          if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+
+          let matchCategory = true;
+          if (categoryFilter) {
+            const rowCategory = row['職業カテゴリー'] || "";
+            const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+            matchCategory = categoriesInRow.includes(categoryFilter);
+          }
+
+          const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+
+          return matchFreeWord && matchLocation && matchCampaign && matchCategory && matchPeriod;
+        });
+
+        const jobSet = new Set();
+        filtered.forEach(row => {
+          const stdJob = row['標準化された職種名'] || "";
+          if (stdJob) {
+            const jobs = stdJob.split(',').map(j => j.trim()).filter(j => j.length > 0);
+            jobs.forEach(j => jobSet.add(j));
+          }
+        });
+
+        const exactMatchWord = freeWord.trim();
+        const candidateJobs = Array.from(jobSet).filter(job => job !== exactMatchWord);
+
+        const validJobs = candidateJobs.filter(job => {
+          const jobTokens = splitKeywords(job);
+          
+          return data.some(row => {
+            const jobName = row['職種名'] || "";
+            const matchFreeWord = jobTokens.length === 0 ? true :
+              searchMode === 'AND'
+                ? jobTokens.every(kw => jobName.includes(kw))
+                : jobTokens.some(kw => jobName.includes(kw));
+                
+            if (!matchFreeWord) return false;
+
+            const loc = row['勤務地'] || "";
+            const matchLocation = locationKeywords.length === 0 ? true :
+              searchMode === 'AND'
+                ? locationKeywords.every(kw => loc.includes(kw))
+                : locationKeywords.some(kw => loc.includes(kw));
+                
+            if (!matchLocation) return false;
+
+            const campaign = row['キャンペーン'] || "";
+            const hasSA = campaign.includes("SA-");
+            if (campaignFilter === 'sa-only' && !hasSA) return false;
+            if (campaignFilter === 'non-sa-only' && hasSA) return false;
+
+            if (categoryFilter) {
+              const rowCategory = row['職業カテゴリー'] || "";
+              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+              if (!categoriesInRow.includes(categoryFilter)) return false;
+            }
+
+            const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+            if (!matchPeriod) return false;
+
+            return true;
+          });
+        });
+
+        return validJobs;
+      }, [data, freeWord, location, campaignFilter, categoryFilter, searchMode, periodFrom, periodTo, includeUnknown]);
+
+      const { filteredData, totals } = useMemo(() => {
+        const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
+        
+        const freeWordKeywords = splitKeywords(freeWord);
+        const locationKeywords = splitKeywords(location);
+
+        const filtered = data.filter(row => {
+          const jobName = row['職種名'] || "";
+          
+          let matchJob = true;
+          
           const matchFreeWord = freeWordKeywords.length > 0 ? (
             searchMode === 'AND'
               ? freeWordKeywords.every(kw => jobName.includes(kw))
               : freeWordKeywords.some(kw => jobName.includes(kw))
           ) : false;
-          const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
-          matchJob = matchFreeWord || matchSelectedJobs;
-        }
 
-        const loc = row['勤務地'] || "";
-        const matchLocation = locationKeywords.length === 0 ? true :
-          searchMode === 'AND'
-            ? locationKeywords.every(kw => loc.includes(kw))
-            : locationKeywords.some(kw => loc.includes(kw));
+          if (comparisonMode === 'job') {
+            if (freeWordKeywords.length > 0) {
+              matchJob = matchFreeWord;
+            } else {
+              matchJob = true; 
+            }
+          } else {
+            if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
+              const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
+              matchJob = matchFreeWord || matchSelectedJobs;
+            }
+          }
 
-        const campaign = row['キャンペーン'] || "";
-        const hasSA = campaign.includes("SA-");
-        let matchCampaign = true;
-        if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
-        if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+          const loc = row['勤務地'] || "";
+          const matchLocation = locationKeywords.length === 0 ? true :
+            searchMode === 'AND'
+              ? locationKeywords.every(kw => loc.includes(kw))
+              : locationKeywords.some(kw => loc.includes(kw));
 
-        let matchCategory = true;
-        if (categoryFilter) {
-          const rowCategory = row['職業カテゴリー'] || "";
-          const categoriesInRow = rowCategory.split(',').map(c => c.trim());
-          matchCategory = categoriesInRow.includes(categoryFilter);
-        }
+          const campaign = row['キャンペーン'] || "";
+          const hasSA = campaign.includes("SA-");
+          let matchCampaign = true;
+          if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
+          if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
 
-        const matchPeriod = checkPeriodMatch(row['集計期間'], from, to, false);
+          let matchCategory = true;
+          if (categoryFilter) {
+            const rowCategory = row['職業カテゴリー'] || "";
+            const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+            matchCategory = categoriesInRow.includes(categoryFilter);
+          }
 
-        return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
-      });
+          const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
 
-      const calcTotals = {
-        label: labelStr,
-        isDiff: false,
-        count: filtered.length,
-        cost: 0,
-        impressions: 0,
-        clicks: 0,
-        applyStarts: 0,
-        applies: 0
+          return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
+        });
+
+        const calcTotals = {
+          count: filtered.length,
+          cost: 0,
+          impressions: 0,
+          clicks: 0,
+          applyStarts: 0,
+          applies: 0
+        };
+
+        filtered.forEach(row => {
+          calcTotals.cost += parseNum(row['消化金額']);
+          calcTotals.impressions += parseNum(row['表示回数']);
+          calcTotals.clicks += parseNum(row['クリック数']);
+          calcTotals.applyStarts += parseNum(row['応募開始数']);
+          calcTotals.applies += parseNum(row['応募数']);
+        });
+
+        calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
+        calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
+        calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
+        calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
+        calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+
+        return { filteredData: filtered, totals: calcTotals };
+      }, [data, appliedFilters, comparisonMode]);
+
+      const simulationResults = useMemo(() => {
+        const { location, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
+        const targetKeywords = selectedJobTitles.map(job => ({ keyword: job, suffix: '' }));
+
+        if (targetKeywords.length === 0) return [];
+
+        const locationKeywords = splitKeywords(location);
+        const results = [];
+
+        targetKeywords.forEach(({ keyword, suffix }) => {
+          const keywordTokens = splitKeywords(keyword);
+          
+          const filtered = data.filter(row => {
+            const jobName = row['職種名'] || "";
+            const matchFreeWord = keywordTokens.length === 0 ? true :
+              searchMode === 'AND'
+                ? keywordTokens.every(kw => jobName.includes(kw))
+                : keywordTokens.some(kw => jobName.includes(kw));
+
+            const loc = row['勤務地'] || "";
+            const matchLocation = locationKeywords.length === 0 ? true :
+              searchMode === 'AND'
+                ? locationKeywords.every(kw => loc.includes(kw))
+                : locationKeywords.some(kw => loc.includes(kw));
+
+            const campaign = row['キャンペーン'] || "";
+            const hasSA = campaign.includes("SA-");
+            let matchCampaign = true;
+            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
+            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+
+            let matchCategory = true;
+            if (categoryFilter) {
+              const rowCategory = row['職業カテゴリー'] || "";
+              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+              matchCategory = categoriesInRow.includes(categoryFilter);
+            }
+
+            const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+
+            return matchFreeWord && matchLocation && matchCampaign && matchCategory && matchPeriod;
+          });
+
+          if (filtered.length > 0) {
+            const calcTotals = {
+              keyword: keyword,
+              suffix: suffix,
+              count: filtered.length,
+              cost: 0,
+              impressions: 0,
+              clicks: 0,
+              applyStarts: 0,
+              applies: 0
+            };
+
+            filtered.forEach(row => {
+              calcTotals.cost += parseNum(row['消化金額']);
+              calcTotals.impressions += parseNum(row['表示回数']);
+              calcTotals.clicks += parseNum(row['クリック数']);
+              calcTotals.applyStarts += parseNum(row['応募開始数']);
+              calcTotals.applies += parseNum(row['応募数']);
+            });
+
+            calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
+            calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
+            calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
+            calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
+            calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+
+            results.push(calcTotals);
+          }
+        });
+
+        return results.sort((a, b) => b.count - a.count);
+      }, [data, appliedFilters]);
+
+      const prefectureResults = useMemo(() => {
+        if (comparisonMode !== 'prefecture') return [];
+
+        const { freeWord, campaignFilter, categoryFilter, searchMode, selectedJobTitles, periodFrom, periodTo, includeUnknown } = appliedFilters;
+
+        const freeWordKeywords = splitKeywords(freeWord);
+        const results = [];
+
+        PREFECTURES.forEach(pref => {
+          const filtered = data.filter(row => {
+            const jobName = row['職種名'] || "";
+            
+            let matchJob = true;
+            if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
+              const matchFreeWord = freeWordKeywords.length > 0 ? (
+                searchMode === 'AND'
+                  ? freeWordKeywords.every(kw => jobName.includes(kw))
+                  : freeWordKeywords.some(kw => jobName.includes(kw))
+              ) : false;
+              
+              const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
+              
+              matchJob = matchFreeWord || matchSelectedJobs;
+            }
+
+            const loc = row['勤務地'] || "";
+            const matchLocation = loc.includes(pref);
+
+            const campaign = row['キャンペーン'] || "";
+            const hasSA = campaign.includes("SA-");
+            let matchCampaign = true;
+            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
+            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+
+            let matchCategory = true;
+            if (categoryFilter) {
+              const rowCategory = row['職業カテゴリー'] || "";
+              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+              matchCategory = categoriesInRow.includes(categoryFilter);
+            }
+
+            const matchPeriod = checkPeriodMatch(row['集計期間'], periodFrom, periodTo, includeUnknown);
+
+            return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
+          });
+
+          if (filtered.length > 0) {
+            const calcTotals = {
+              prefecture: pref,
+              count: filtered.length,
+              cost: 0,
+              impressions: 0,
+              clicks: 0,
+              applyStarts: 0,
+              applies: 0
+            };
+
+            filtered.forEach(row => {
+              calcTotals.cost += parseNum(row['消化金額']);
+              calcTotals.impressions += parseNum(row['表示回数']);
+              calcTotals.clicks += parseNum(row['クリック数']);
+              calcTotals.applyStarts += parseNum(row['応募開始数']);
+              calcTotals.applies += parseNum(row['応募数']);
+            });
+
+            calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
+            calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
+            calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
+            calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
+            calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+
+            if (calcTotals.count >= 1) {
+              if (showOnlyCpa && (calcTotals.cpa === null || calcTotals.cpa < 1)) {
+                // 何もしない
+              } else {
+                results.push(calcTotals);
+              }
+            }
+          }
+        });
+
+        return results.sort((a, b) => {
+          if (a.cpa === null && b.cpa === null) {
+            if (a.cpc === null && b.cpc === null) {
+              return b.count - a.count;
+            }
+            if (a.cpc === null) return 1;
+            if (b.cpc === null) return -1;
+            return a.cpc - b.cpc;
+          }
+          
+          if (a.cpa === null) return 1;
+          if (b.cpa === null) return -1;
+          return a.cpa - b.cpa;
+        });
+      }, [data, appliedFilters, comparisonMode, showOnlyCpa]);
+
+      const periodResults = useMemo(() => {
+        if (comparisonMode !== 'period') return [];
+
+        const { freeWord, location, campaignFilter, categoryFilter, searchMode, selectedJobTitles } = appliedFilters;
+
+        const freeWordKeywords = splitKeywords(freeWord);
+        const locationKeywords = splitKeywords(location);
+
+        const calcForPeriod = (from, to, labelStr) => {
+          const filtered = data.filter(row => {
+            const jobName = row['職種名'] || "";
+            let matchJob = true;
+            if (freeWordKeywords.length > 0 || selectedJobTitles.length > 0) {
+              const matchFreeWord = freeWordKeywords.length > 0 ? (
+                searchMode === 'AND'
+                  ? freeWordKeywords.every(kw => jobName.includes(kw))
+                  : freeWordKeywords.some(kw => jobName.includes(kw))
+              ) : false;
+              const matchSelectedJobs = selectedJobTitles.some(job => jobName.includes(job));
+              matchJob = matchFreeWord || matchSelectedJobs;
+            }
+
+            const loc = row['勤務地'] || "";
+            const matchLocation = locationKeywords.length === 0 ? true :
+              searchMode === 'AND'
+                ? locationKeywords.every(kw => loc.includes(kw))
+                : locationKeywords.some(kw => loc.includes(kw));
+
+            const campaign = row['キャンペーン'] || "";
+            const hasSA = campaign.includes("SA-");
+            let matchCampaign = true;
+            if (campaignFilter === 'sa-only' && !hasSA) matchCampaign = false;
+            if (campaignFilter === 'non-sa-only' && hasSA) matchCampaign = false;
+
+            let matchCategory = true;
+            if (categoryFilter) {
+              const rowCategory = row['職業カテゴリー'] || "";
+              const categoriesInRow = rowCategory.split(',').map(c => c.trim());
+              matchCategory = categoriesInRow.includes(categoryFilter);
+            }
+
+            const matchPeriod = checkPeriodMatch(row['集計期間'], from, to, false);
+
+            return matchJob && matchLocation && matchCampaign && matchCategory && matchPeriod;
+          });
+
+          const calcTotals = {
+            label: labelStr,
+            isDiff: false,
+            count: filtered.length,
+            cost: 0,
+            impressions: 0,
+            clicks: 0,
+            applyStarts: 0,
+            applies: 0
+          };
+
+          filtered.forEach(row => {
+            calcTotals.cost += parseNum(row['消化金額']);
+            calcTotals.impressions += parseNum(row['表示回数']);
+            calcTotals.clicks += parseNum(row['クリック数']);
+            calcTotals.applyStarts += parseNum(row['応募開始数']);
+            calcTotals.applies += parseNum(row['応募数']);
+          });
+
+          calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
+          calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
+          calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
+          calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
+          calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+
+          return calcTotals;
+        };
+
+        const formatLabel = (from, to) => {
+          if (!from && !to) return "指定なし (全期間)";
+          const f = from ? formatYearMonth(from) : '全期間';
+          const t = to ? formatYearMonth(to) : '全期間';
+          return `${f} 〜 ${t}`;
+        };
+
+        const labelA = formatLabel(comparePeriodAFrom, comparePeriodATo);
+        const labelB = formatLabel(comparePeriodBFrom, comparePeriodBTo);
+
+        const resA = calcForPeriod(comparePeriodAFrom, comparePeriodATo, `期間 A : ${labelA}`);
+        const resB = calcForPeriod(comparePeriodBFrom, comparePeriodBTo, `期間 B : ${labelB}`);
+
+        const diff = {
+          label: '差分 (B － A)',
+          isDiff: true,
+          count: resB.count - resA.count,
+          cost: resB.cost - resA.cost,
+          impressions: resB.impressions - resA.impressions,
+          clicks: resB.clicks - resA.clicks,
+          applyStarts: resB.applyStarts - resA.applyStarts,
+          applies: resB.applies - resA.applies,
+          ctr: (resB.ctr !== null && resA.ctr !== null) ? resB.ctr - resA.ctr : null,
+          applyStartRate: (resB.applyStartRate !== null && resA.applyStartRate !== null) ? resB.applyStartRate - resA.applyStartRate : null,
+          cvr: (resB.cvr !== null && resA.cvr !== null) ? resB.cvr - resA.cvr : null,
+          cpc: (resB.cpc !== null && resA.cpc !== null) ? resB.cpc - resA.cpc : null,
+          cpa: (resB.cpa !== null && resA.cpa !== null) ? resB.cpa - resA.cpa : null,
+        };
+
+        return [resA, resB, diff];
+      }, [data, appliedFilters, comparisonMode, comparePeriodAFrom, comparePeriodATo, comparePeriodBFrom, comparePeriodBTo]);
+
+      const allStatItems = [
+        { id: 'count', title: '該当件数', value: totals.count, unit: '件', icon: <Briefcase size={14} className="text-sky-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'cost', title: '消化金額', value: totals.cost, unit: '円', icon: <DollarSign size={14} className="text-green-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'impressions', title: '表示回数', value: totals.impressions, unit: '回', icon: <Eye size={14} className="text-purple-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'clicks', title: 'クリック数', value: totals.clicks, unit: '回', icon: <MousePointer size={14} className="text-orange-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'applyStarts', title: '応募開始数', value: totals.applyStarts, unit: '件', icon: <PlayCircle size={14} className="text-rose-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'applies', title: '応募数', value: totals.applies, unit: '件', icon: <Users size={14} className="text-indigo-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'ctr', title: 'クリック率 (CTR)', value: totals.ctr, unit: '%', icon: <Activity size={14} className="text-teal-500 drop-shadow-sm" />, decimalPlaces: 2 },
+        { id: 'applyStartRate', title: '応募開始率', value: totals.applyStartRate, unit: '%', icon: <TrendingUp size={14} className="text-cyan-500 drop-shadow-sm" />, decimalPlaces: 2 },
+        { id: 'cvr', title: '応募率 (CVR)', value: totals.cvr, unit: '%', icon: <Target size={14} className="text-red-500 drop-shadow-sm" />, decimalPlaces: 2 },
+        { id: 'cpc', title: 'CPC', value: totals.cpc, unit: '円', icon: <Coins size={14} className="text-fuchsia-500 drop-shadow-sm" />, decimalPlaces: 0 },
+        { id: 'cpa', title: 'CPA', value: totals.cpa, unit: '円', icon: <CreditCard size={14} className="text-violet-500 drop-shadow-sm" />, decimalPlaces: 0 },
+      ];
+
+      const statItems = allStatItems.filter(item => visibleColumns.includes(item.id));
+
+      const toggleColumn = (id) => {
+        setVisibleColumns(prev => 
+          prev.includes(id) 
+            ? prev.filter(colId => colId !== id)
+            : [...prev, id]
+        );
       };
 
-      filtered.forEach(row => {
-        calcTotals.cost += parseNum(row['消化金額']);
-        calcTotals.impressions += parseNum(row['表示回数']);
-        calcTotals.clicks += parseNum(row['クリック数']);
-        calcTotals.applyStarts += parseNum(row['応募開始数']);
-        calcTotals.applies += parseNum(row['応募数']);
-      });
+      const handleCopyTable = () => {
+        let tsv = '';
+        const separator = '\t';
+        const newline = '\n';
 
-      calcTotals.ctr = calcTotals.impressions > 0 ? (calcTotals.clicks / calcTotals.impressions) * 100 : null;
-      calcTotals.applyStartRate = calcTotals.clicks > 0 ? (calcTotals.applyStarts / calcTotals.clicks) * 100 : null;
-      calcTotals.cvr = calcTotals.clicks > 0 ? (calcTotals.applies / calcTotals.clicks) * 100 : null;
-      calcTotals.cpc = calcTotals.clicks > 0 ? calcTotals.cost / calcTotals.clicks : null;
-      calcTotals.cpa = calcTotals.applies > 0 ? calcTotals.cost / calcTotals.applies : null;
+        const { freeWord, location, searchMode, selectedJobTitles } = appliedFilters;
 
-      return calcTotals;
-    };
+        const combinedKeywordsStr = [freeWord, ...selectedJobTitles].filter(Boolean).join(' OR ');
 
-    const formatLabel = (from, to) => {
-      if (!from && !to) return "指定なし (全期間)";
-      const f = from ? formatYearMonth(from) : '全期間';
-      const t = to ? formatYearMonth(to) : '全期間';
-      return `${f} 〜 ${t}`;
-    };
+        const headers = ['検索キーワード', '勤務地'];
+        statItems.forEach(item => headers.push(item.title));
+        tsv += headers.join(separator) + newline;
 
-    const labelA = formatLabel(comparePeriodAFrom, comparePeriodATo);
-    const labelB = formatLabel(comparePeriodBFrom, comparePeriodBTo);
+        const topRowKeyword = (comparisonMode === 'prefecture' || comparisonMode === 'period') ? combinedKeywordsStr : freeWord;
+        const mainRow = [topRowKeyword || '（指定なし）', location || '（全国）'];
+        
+        statItems.forEach(item => {
+          let val = item.value;
+          if (val !== null && item.unit === '%') {
+            val = val.toFixed(item.decimalPlaces) + '%';
+          }
+          mainRow.push(val === null ? '-' : val);
+        });
+        tsv += mainRow.join(separator) + newline;
 
-    const resA = calcForPeriod(comparePeriodAFrom, comparePeriodATo, `期間 A : ${labelA}`);
-    const resB = calcForPeriod(comparePeriodBFrom, comparePeriodBTo, `期間 B : ${labelB}`);
-
-    const diff = {
-      label: '差分 (B － A)',
-      isDiff: true,
-      count: resB.count - resA.count,
-      cost: resB.cost - resA.cost,
-      impressions: resB.impressions - resA.impressions,
-      clicks: resB.clicks - resA.clicks,
-      applyStarts: resB.applyStarts - resA.applyStarts,
-      applies: resB.applies - resA.applies,
-      ctr: (resB.ctr !== null && resA.ctr !== null) ? resB.ctr - resA.ctr : null,
-      applyStartRate: (resB.applyStartRate !== null && resA.applyStartRate !== null) ? resB.applyStartRate - resA.applyStartRate : null,
-      cvr: (resB.cvr !== null && resA.cvr !== null) ? resB.cvr - resA.cvr : null,
-      cpc: (resB.cpc !== null && resA.cpc !== null) ? resB.cpc - resA.cpc : null,
-      cpa: (resB.cpa !== null && resA.cpa !== null) ? resB.cpa - resA.cpa : null,
-    };
-
-    return [resA, resB, diff];
-  // ▼ 変更：依存配列を appliedFilters に変更
-  }, [data, appliedFilters, comparisonMode, comparePeriodAFrom, comparePeriodATo, comparePeriodBFrom, comparePeriodBTo]);
-
-  const allStatItems = [
-    { id: 'count', title: '該当件数', value: totals.count, unit: '件', icon: <Briefcase size={14} className="text-sky-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'cost', title: '消化金額', value: totals.cost, unit: '円', icon: <DollarSign size={14} className="text-green-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'impressions', title: '表示回数', value: totals.impressions, unit: '回', icon: <Eye size={14} className="text-purple-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'clicks', title: 'クリック数', value: totals.clicks, unit: '回', icon: <MousePointer size={14} className="text-orange-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'applyStarts', title: '応募開始数', value: totals.applyStarts, unit: '件', icon: <PlayCircle size={14} className="text-rose-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'applies', title: '応募数', value: totals.applies, unit: '件', icon: <Users size={14} className="text-indigo-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'ctr', title: 'クリック率 (CTR)', value: totals.ctr, unit: '%', icon: <Activity size={14} className="text-teal-500 drop-shadow-sm" />, decimalPlaces: 2 },
-    { id: 'applyStartRate', title: '応募開始率', value: totals.applyStartRate, unit: '%', icon: <TrendingUp size={14} className="text-cyan-500 drop-shadow-sm" />, decimalPlaces: 2 },
-    { id: 'cvr', title: '応募率 (CVR)', value: totals.cvr, unit: '%', icon: <Target size={14} className="text-red-500 drop-shadow-sm" />, decimalPlaces: 2 },
-    { id: 'cpc', title: 'CPC', value: totals.cpc, unit: '円', icon: <Coins size={14} className="text-fuchsia-500 drop-shadow-sm" />, decimalPlaces: 0 },
-    { id: 'cpa', title: 'CPA', value: totals.cpa, unit: '円', icon: <CreditCard size={14} className="text-violet-500 drop-shadow-sm" />, decimalPlaces: 0 },
-  ];
-
-  const statItems = allStatItems.filter(item => visibleColumns.includes(item.id));
-
-  const toggleColumn = (id) => {
-    setVisibleColumns(prev => 
-      prev.includes(id) 
-        ? prev.filter(colId => colId !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleCopyTable = () => {
-    let tsv = '';
-    const separator = '\t';
-    const newline = '\n';
-
-    // ▼ 変更：コピーする内容も確定済みの条件を使用
-    const { freeWord, location, searchMode, selectedJobTitles } = appliedFilters;
-
-    const combinedKeywordsStr = [freeWord, ...selectedJobTitles].filter(Boolean).join(' OR ');
-
-    const headers = ['検索キーワード', '勤務地'];
-    statItems.forEach(item => headers.push(item.title));
-    tsv += headers.join(separator) + newline;
-
-    const topRowKeyword = (comparisonMode === 'prefecture' || comparisonMode === 'period') ? combinedKeywordsStr : freeWord;
-    const mainRow = [topRowKeyword || '（指定なし）', location || '（全国）'];
-    
-    statItems.forEach(item => {
-      let val = item.value;
-      if (val !== null && item.unit === '%') {
-        val = val.toFixed(item.decimalPlaces) + '%';
-      }
-      mainRow.push(val === null ? '-' : val);
-    });
-    tsv += mainRow.join(separator) + newline;
-
-    const rows = comparisonMode === 'job' ? simulationResults : comparisonMode === 'prefecture' ? prefectureResults : periodResults;
-    rows.forEach(result => {
-      const rowData = [];
-      if (comparisonMode === 'job') {
-        rowData.push(result.keyword + (result.suffix || ''));
-        rowData.push(location || '（全国）');
-      } else if (comparisonMode === 'prefecture') {
-        rowData.push(combinedKeywordsStr || '（指定なし）');
-        rowData.push(result.prefecture);
-      } else if (comparisonMode === 'period') {
-        rowData.push(result.label);
-        rowData.push(location || '（全国）');
-      }
-      
-      statItems.forEach(item => {
-        let val = result[item.id];
-        if (val !== null) {
-          const sign = (comparisonMode === 'period' && result.isDiff && val > 0) ? '+' : '';
-          let numStr = val.toFixed(item.decimalPlaces);
-          let unitStr = item.unit === '%' ? (result.isDiff ? 'pt' : '%') : '';
-          val = sign + numStr + unitStr;
-        }
-        rowData.push(val === null ? '-' : val);
-      });
-      tsv += rowData.join(separator) + newline;
-    });
-
-    const textarea = document.createElement('textarea');
-    textarea.value = tsv;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('コピーに失敗しました', err);
-      alert('コピーに失敗しました。');
-    } finally {
-      document.body.removeChild(textarea);
-    }
-  };
-
-  const totalTableWidth = 200 + 140 + statItems.length * 140;
-
-  // ▼ 追加：表の描画に使う表示用変数を、確定済みのフィルターから取得
-  const displayFreeWord = appliedFilters.freeWord;
-  const displayLocation = appliedFilters.location;
-  const displaySearchMode = appliedFilters.searchMode;
-  const displaySelectedJobTitles = appliedFilters.selectedJobTitles;
-  const displayCombinedKeywordsStr = [displayFreeWord, ...displaySelectedJobTitles].filter(Boolean).join(' OR ');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-        <Loader2 className="animate-spin text-orange-500" size={64} />
-        <p className="text-stone-600 font-bold text-xl animate-pulse">データを読み込んでいます...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-        <div className="bg-white/90 backdrop-blur-xl border-4 border-white p-8 rounded-[2rem] max-w-md w-full flex flex-col items-center text-center space-y-4 shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)]">
-          <AlertCircle className="text-rose-500 drop-shadow-md" size={64} />
-          <h2 className="text-2xl font-bold text-stone-800">読み込み失敗！</h2>
-          <p className="text-stone-600 text-base font-bold">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-8 py-3 bg-gradient-to-b from-stone-100 to-stone-200 text-stone-600 border-2 border-stone-300 font-bold rounded-2xl shadow-[0_4px_0_0_#d6d3d1] active:shadow-none active:translate-y-[4px] transition-all hover:brightness-105"
-          >
-            もう一度ためす
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className="text-stone-700 font-medium" 
-      style={{ 
-        fontFamily: "'Zen Maru Gothic', sans-serif", 
-        background: "linear-gradient(135deg, #fef3c7 0%, #ffedd5 50%, #fef9c3 100%)", 
-        backgroundAttachment: "fixed", 
-        minHeight: "100vh" 
-      }}
-    >
-      <div className="min-h-screen p-4 md:p-6 lg:p-8 flex flex-col relative">
-
-        <div className="max-w-[1800px] mx-auto space-y-8 w-full">
+        const rows = comparisonMode === 'job' ? simulationResults : comparisonMode === 'prefecture' ? prefectureResults : periodResults;
+        rows.forEach(result => {
+          const rowData = [];
+          if (comparisonMode === 'job') {
+            rowData.push(result.keyword + (result.suffix || ''));
+            rowData.push(location || '（全国）');
+          } else if (comparisonMode === 'prefecture') {
+            rowData.push(combinedKeywordsStr || '（指定なし）');
+            rowData.push(result.prefecture);
+          } else if (comparisonMode === 'period') {
+            rowData.push(result.label);
+            rowData.push(location || '（全国）');
+          }
           
-          <div className="bg-white/90 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] border-4 border-white overflow-hidden">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-3 drop-shadow-sm">
-                <BarChartIcon /> 天市×indeedPLUS運用実績
-              </h1>
-            </div>
+          statItems.forEach(item => {
+            let val = result[item.id];
+            if (val !== null) {
+              const sign = (comparisonMode === 'period' && result.isDiff && val > 0) ? '+' : '';
+              let numStr = val.toFixed(item.decimalPlaces);
+              let unitStr = item.unit === '%' ? (result.isDiff ? 'pt' : '%') : '';
+              val = sign + numStr + unitStr;
+            }
+            rowData.push(val === null ? '-' : val);
+          });
+          tsv += rowData.join(separator) + newline;
+        });
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-stone-100/50 p-6 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)]">
-              <div className="space-y-2">
-                <label htmlFor="freeWord" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
-                  <Briefcase size={16} className="text-sky-500 drop-shadow-sm" /> 
-                  フリーワード <span className="text-xs text-stone-400 font-bold ml-1">※職種名を検索</span>
-                </label>
-                <div className="relative">
-                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
-                  <input
-                    id="freeWord"
-                    type="text"
-                    value={freeWordInput}
-                    onChange={(e) => setFreeWordInput(e.target.value)}
-                    placeholder="例: 営業 マネージャー"
-                    className="w-full pl-12 pr-10 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
-                  />
-                  {freeWordInput && (
-                    <button 
-                      onClick={() => setFreeWordInput('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-rose-500 bg-white rounded-full p-1 shadow-sm transition-colors"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              </div>
+        const textarea = document.createElement('textarea');
+        textarea.value = tsv;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+        } catch (err) {
+          console.error('コピーに失敗しました', err);
+          alert('コピーに失敗しました。');
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      };
 
-              <div className="space-y-2">
-                <label htmlFor="location" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
-                  <MapPin size={16} className="text-orange-500 drop-shadow-sm" /> 
-                  勤務地
-                </label>
-                <div className="relative">
-                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
-                  <input
-                    id="location"
-                    type="text"
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    placeholder="例: 東京 新宿"
-                    className="w-full pl-12 pr-10 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-orange-300 focus:ring-4 focus:ring-orange-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
-                  />
-                  {locationInput && (
-                    <button 
-                      onClick={() => setLocationInput('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-rose-500 bg-white rounded-full p-1 shadow-sm transition-colors"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              </div>
+      const totalTableWidth = 200 + 140 + statItems.length * 140;
 
-              <div className="space-y-2">
-                <label htmlFor="category" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
-                  <FolderOpen size={16} className="text-amber-500 drop-shadow-sm" /> 
-                  職業カテゴリー
-                </label>
-                <div className="relative">
-                  <select
-                    id="category"
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full pl-4 pr-12 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-amber-300 focus:ring-4 focus:ring-amber-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer"
-                  >
-                    <option value="">すべてのカテゴリー</option>
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none bg-white rounded-full p-0.5 shadow-sm" />
-                </div>
-              </div>
+      const displayFreeWord = appliedFilters.freeWord;
+      const displayLocation = appliedFilters.location;
+      const displaySearchMode = appliedFilters.searchMode;
+      const displaySelectedJobTitles = appliedFilters.selectedJobTitles;
+      const displayCombinedKeywordsStr = [displayFreeWord, ...displaySelectedJobTitles].filter(Boolean).join(' OR ');
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
-                  <Calendar size={16} className="text-indigo-500 drop-shadow-sm" /> 
-                  集計期間
-                </label>
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex items-center gap-1 relative">
-                    <select
-                      value={periodFrom}
-                      onChange={(e) => setPeriodFrom(e.target.value)}
-                      className="w-full pl-3 pr-8 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">開始月</option>
-                      {availableYearMonths.map(ym => <option key={`from-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                    <span className="text-stone-400 font-bold">〜</span>
-                    <select
-                      value={periodTo}
-                      onChange={(e) => setPeriodTo(e.target.value)}
-                      className="w-full pl-3 pr-8 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">終了月</option>
-                      {availableYearMonths.map(ym => <option key={`to-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                  </div>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors ml-1 w-max">
-                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors shadow-inner ${includeUnknown ? 'bg-gradient-to-b from-indigo-400 to-indigo-500 border-none' : 'border-stone-300 bg-white'}`}>
-                      {includeUnknown && <Check size={12} className="text-white drop-shadow-sm" />}
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={includeUnknown}
-                      onChange={(e) => setIncludeUnknown(e.target.checked)}
-                      className="sr-only"
-                    />
-                    「（不明）」のデータを含める
-                  </label>
-                </div>
-              </div>
+      if (loading) {
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center space-y-4 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+            <Loader2 className="animate-spin text-orange-500" size={64} />
+            <p className="text-stone-600 font-bold text-xl animate-pulse">データを読み込んでいます...</p>
+          </div>
+        );
+      }
 
-              {relatedJobTitles.length > 0 && (
-                <div className="col-span-1 md:col-span-2 lg:col-span-4 pt-5 border-t-4 border-white border-dashed">
-                  <p className="text-sm font-bold text-stone-500 mb-3 flex items-center gap-1.5">
-                    <Sparkles size={16} className="text-amber-500 drop-shadow-sm" /> 関連する標準化職種 <span className="text-stone-400 font-bold ml-1 text-xs">※クリックして比較表に追加</span>
-                  </p>
-                  <div className="flex flex-wrap gap-3 max-h-64 overflow-y-auto p-1.5 pr-3 custom-scrollbar">
-                    {relatedJobTitles.map((job, idx) => {
-                      const isSelected = selectedJobTitles.includes(job);
-                      return (
-                        <button 
-                          key={idx} 
-                          onClick={() => {
-                            setSelectedJobTitles(prev => 
-                              prev.includes(job) ? prev.filter(j => j !== job) : [...prev, job]
-                            );
-                          }}
-                          className={`px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all text-left ${
-                            isSelected
-                              ? 'bg-gradient-to-b from-amber-300 to-orange-400 text-white border-orange-200 shadow-[0_4px_0_0_#c2410c] active:shadow-none active:translate-y-[4px] hover:brightness-110'
-                              : 'bg-stone-100 text-stone-500 border-stone-200 shadow-[0_4px_0_0_#d6d3d1] active:shadow-none active:translate-y-[4px] hover:bg-white hover:text-stone-600'
-                          }`}
-                        >
-                          {job}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-stone-100/50 p-5 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center gap-4">
-                <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5 whitespace-nowrap">
-                  <Search size={16} className="text-stone-400 drop-shadow-sm" />
-                  複数ワードの条件
-                </label>
-                <div className="flex flex-wrap bg-stone-200/80 p-2.5 rounded-2xl shadow-inner w-full sm:w-auto gap-3 overflow-visible">
-                  <button
-                    onClick={() => setSearchMode('OR')}
-                    className={`flex-1 sm:flex-none px-5 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
-                      searchMode === 'OR' 
-                        ? 'bg-gradient-to-b from-orange-400 to-orange-500 text-white font-bold shadow-[0_4px_0_0_#c2410c] -translate-y-[2px]' 
-                        : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                    }`}
-                  >
-                    いずれかを含む (OR)
-                  </button>
-                  <button
-                    onClick={() => setSearchMode('AND')}
-                    className={`flex-1 sm:flex-none px-5 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
-                      searchMode === 'AND' 
-                        ? 'bg-gradient-to-b from-sky-400 to-sky-500 text-white font-bold shadow-[0_4px_0_0_#0284c7] -translate-y-[2px]' 
-                        : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                    }`}
-                  >
-                    すべて含む (AND)
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-stone-100/50 p-5 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center gap-4">
-                <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5 whitespace-nowrap">
-                  <Tag size={16} className="text-stone-400 drop-shadow-sm" />
-                  求人の種類
-                </label>
-                <div className="flex flex-wrap bg-stone-200/80 p-2.5 rounded-2xl shadow-inner w-full sm:w-auto gap-3 overflow-visible">
-                  <button
-                    onClick={() => setCampaignFilter('all')}
-                    className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
-                      campaignFilter === 'all' 
-                        ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
-                        : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                    }`}
-                  >
-                    すべて
-                  </button>
-                  <button
-                    onClick={() => setCampaignFilter('sa-only')}
-                    className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
-                      campaignFilter === 'sa-only' 
-                        ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
-                        : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                    }`}
-                  >
-                    「SA-」のみ
-                  </button>
-                  <button
-                    onClick={() => setCampaignFilter('non-sa-only')}
-                    className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
-                      campaignFilter === 'non-sa-only' 
-                        ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
-                        : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                    }`}
-                  >
-                    「SA-」以外
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t-4 border-stone-100 border-dashed pt-5">
-              <div className="flex items-start gap-2 text-stone-500 text-sm font-bold bg-amber-50 p-3 rounded-xl border-2 border-amber-100 w-full">
-                <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
-                <p>
-                  スペース区切りで複数キーワードの {searchMode === 'AND' ? 'AND検索' : 'OR検索'} が可能です。フリーワードと勤務地の両方に入力がある場合、双方の条件を満たす行のみが集計対象となります。
-                </p>
-              </div>
-
-              {/* ▼ 追加：集計実行ボタン */}
-              <button
-                onClick={handleApplyFilters}
-                className={`flex-shrink-0 px-8 py-3.5 rounded-2xl font-bold text-base transition-all flex items-center gap-2 ${
-                  hasUnappliedChanges
-                    ? 'bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-[0_6px_0_0_#9f1239] hover:brightness-110 active:shadow-none active:translate-y-[6px]'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-[0_6px_0_0_#d6d3d1]'
-                }`}
-                disabled={!hasUnappliedChanges}
+      if (error) {
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+            <div className="bg-white/90 backdrop-blur-xl border-4 border-white p-8 rounded-[2rem] max-w-md w-full flex flex-col items-center text-center space-y-4 shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)]">
+              <AlertCircle className="text-rose-500 drop-shadow-md" size={64} />
+              <h2 className="text-2xl font-bold text-stone-800">読み込み失敗！</h2>
+              <p className="text-stone-600 text-base font-bold">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-4 px-8 py-3 bg-gradient-to-b from-stone-100 to-stone-200 text-stone-600 border-2 border-stone-300 font-bold rounded-2xl shadow-[0_4px_0_0_#d6d3d1] active:shadow-none active:translate-y-[4px] transition-all hover:brightness-105"
               >
-                <PlayCircle size={20} className={hasUnappliedChanges ? "animate-pulse" : ""} />
-                {hasUnappliedChanges ? 'この条件で集計する' : '集計は最新です'}
+                もう一度ためす
               </button>
             </div>
           </div>
+        );
+      }
 
-          <div className="relative bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] border-4 border-white flex flex-col mb-10 overflow-clip min-h-[400px]">
-            
-            <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-md rounded-t-[2rem] border-b-4 border-stone-100 flex flex-col">
+      return (
+        <div 
+          className="text-stone-700 font-medium" 
+          style={{ 
+            fontFamily: "'Zen Maru Gothic', sans-serif", 
+            minHeight: "100vh" 
+          }}
+        >
+          <div className="min-h-screen p-4 md:p-6 lg:p-8 flex flex-col relative">
+
+            <div className="max-w-[1800px] mx-auto space-y-8 w-full">
               
-              <div className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 shrink-0 rounded-t-[2rem]">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                  <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2 whitespace-nowrap drop-shadow-sm">
-                    <Activity size={28} className="text-rose-400 drop-shadow-sm" /> 集計結果
-                    {/* ▼ 変更：計算待ちバッジから未適用バッジに変更 */}
-                    {hasUnappliedChanges && (
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 border-2 border-amber-200 px-3 py-1.5 rounded-xl ml-2 shadow-inner">
-                        <AlertCircle size={14} /> 条件が変更されています
-                      </span>
-                    )}
-                  </h2>
-                  
-                  <div className="flex bg-stone-200/80 p-1.5 rounded-2xl shadow-inner gap-2">
-                    <button
-                      onClick={() => setComparisonMode('job')}
-                      className={`px-5 py-2 text-xs rounded-xl transition-all ${
-                        comparisonMode === 'job' 
-                          ? 'bg-gradient-to-b from-rose-400 to-rose-500 text-white font-bold shadow-[0_4px_0_0_#be123c] -translate-y-[2px]' 
-                          : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                      }`}
-                    >
-                      関連職種比較
-                    </button>
-                    <button
-                      onClick={() => setComparisonMode('prefecture')}
-                      className={`px-5 py-2 text-xs rounded-xl transition-all ${
-                        comparisonMode === 'prefecture' 
-                          ? 'bg-gradient-to-b from-rose-400 to-rose-500 text-white font-bold shadow-[0_4px_0_0_#be123c] -translate-y-[2px]' 
-                          : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                      }`}
-                    >
-                      都道府県比較
-                    </button>
-                    <button
-                      onClick={() => setComparisonMode('period')}
-                      className={`px-5 py-2 text-xs rounded-xl transition-all ${
-                        comparisonMode === 'period' 
-                          ? 'bg-gradient-to-b from-indigo-400 to-indigo-500 text-white font-bold shadow-[0_4px_0_0_#4338ca] -translate-y-[2px]' 
-                          : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
-                      }`}
-                    >
-                      運用月比較
-                    </button>
+              <div className="bg-white/90 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] border-4 border-white overflow-hidden">
+                <div className="mb-6">
+                  <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-3 drop-shadow-sm">
+                    <BarChartIcon /> 天市×indeedPLUS運用実績
+                  </h1>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-stone-100/50 p-6 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)]">
+                  <div className="space-y-2">
+                    <label htmlFor="freeWord" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
+                      <Briefcase size={16} className="text-sky-500 drop-shadow-sm" /> 
+                      フリーワード <span className="text-xs text-stone-400 font-bold ml-1">※職種名を検索</span>
+                    </label>
+                    <div className="relative">
+                      <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                      <input
+                        id="freeWord"
+                        type="text"
+                        value={freeWordInput}
+                        onChange={(e) => setFreeWordInput(e.target.value)}
+                        placeholder="例: 営業 マネージャー"
+                        className="w-full pl-12 pr-10 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                      />
+                      {freeWordInput && (
+                        <button 
+                          onClick={() => setFreeWordInput('')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-rose-500 bg-white rounded-full p-1 shadow-sm transition-colors"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="location" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
+                      <MapPin size={16} className="text-orange-500 drop-shadow-sm" /> 
+                      勤務地
+                    </label>
+                    <div className="relative">
+                      <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                      <input
+                        id="location"
+                        type="text"
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
+                        placeholder="例: 東京 新宿"
+                        className="w-full pl-12 pr-10 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-orange-300 focus:ring-4 focus:ring-orange-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                      />
+                      {locationInput && (
+                        <button 
+                          onClick={() => setLocationInput('')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-rose-500 bg-white rounded-full p-1 shadow-sm transition-colors"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="category" className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
+                      <FolderOpen size={16} className="text-amber-500 drop-shadow-sm" /> 
+                      職業カテゴリー
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="category"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="w-full pl-4 pr-12 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-amber-300 focus:ring-4 focus:ring-amber-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer"
+                      >
+                        <option value="">すべてのカテゴリー</option>
+                        {CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none bg-white rounded-full p-0.5 shadow-sm" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
+                      <Calendar size={16} className="text-indigo-500 drop-shadow-sm" /> 
+                      集計期間
+                    </label>
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex items-center gap-1 relative">
+                        <select
+                          value={periodFrom}
+                          onChange={(e) => setPeriodFrom(e.target.value)}
+                          className="w-full pl-3 pr-8 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">開始月</option>
+                          {availableYearMonths.map(ym => <option key={`from-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                        <span className="text-stone-400 font-bold">〜</span>
+                        <select
+                          value={periodTo}
+                          onChange={(e) => setPeriodTo(e.target.value)}
+                          className="w-full pl-3 pr-8 py-3.5 bg-stone-50 border-4 border-white rounded-2xl focus:bg-white focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-stone-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">終了月</option>
+                          {availableYearMonths.map(ym => <option key={`to-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors ml-1 w-max">
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors shadow-inner ${includeUnknown ? 'bg-gradient-to-b from-indigo-400 to-indigo-500 border-none' : 'border-stone-300 bg-white'}`}>
+                          {includeUnknown && <Check size={12} className="text-white drop-shadow-sm" />}
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={includeUnknown}
+                          onChange={(e) => setIncludeUnknown(e.target.checked)}
+                          className="sr-only"
+                        />
+                        「（不明）」のデータを含める
+                      </label>
+                    </div>
+                  </div>
+
+                  {relatedJobTitles.length > 0 && (
+                    <div className="col-span-1 md:col-span-2 lg:col-span-4 pt-5 border-t-4 border-white border-dashed">
+                      <p className="text-sm font-bold text-stone-500 mb-3 flex items-center gap-1.5">
+                        <Sparkles size={16} className="text-amber-500 drop-shadow-sm" /> 関連する標準化職種 <span className="text-stone-400 font-bold ml-1 text-xs">※クリックして比較表に追加</span>
+                      </p>
+                      <div className="flex flex-wrap gap-3 max-h-64 overflow-y-auto p-1.5 pr-3 custom-scrollbar">
+                        {relatedJobTitles.map((job, idx) => {
+                          const isSelected = selectedJobTitles.includes(job);
+                          return (
+                            <button 
+                              key={idx} 
+                              onClick={() => {
+                                setSelectedJobTitles(prev => 
+                                  prev.includes(job) ? prev.filter(j => j !== job) : [...prev, job]
+                                );
+                              }}
+                              className={`px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all text-left ${
+                                isSelected
+                                  ? 'bg-gradient-to-b from-amber-300 to-orange-400 text-white border-orange-200 shadow-[0_4px_0_0_#c2410c] active:shadow-none active:translate-y-[4px] hover:brightness-110'
+                                  : 'bg-stone-100 text-stone-500 border-stone-200 shadow-[0_4px_0_0_#d6d3d1] active:shadow-none active:translate-y-[4px] hover:bg-white hover:text-stone-600'
+                              }`}
+                            >
+                              {job}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:justify-end w-full lg:w-auto">
-                  
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="text-stone-500 font-bold mr-1 flex items-center gap-1">
-                      <Filter size={14} className="text-stone-400" /> 適用中の条件:
-                    </span>
-                    
-                    {!freeWord && !location && !categoryFilter && campaignFilter === 'all' && !periodFrom && !periodTo && includeUnknown && (
-                      <span className="px-3 py-1.5 bg-stone-100 text-stone-500 font-bold rounded-xl border-2 border-stone-200">
-                        指定なし（全データ）
-                      </span>
-                    )}
-
-                    {categoryFilter && (
-                      <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
-                        <FolderOpen size={12} className="text-amber-500" /> 
-                        <span>{categoryFilter}</span>
-                      </span>
-                    )}
-
-                    {campaignFilter !== 'all' && (
-                      <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
-                        <Tag size={12} className="text-green-500" /> 
-                        <span>
-                          {campaignFilter === 'sa-only' ? '「SA-」のみ' : '「SA-」以外'}
-                        </span>
-                      </span>
-                    )}
-
-                    {(periodFrom || periodTo || !includeUnknown) && (
-                      <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
-                        <Calendar size={12} className="text-indigo-500" /> 
-                        <span>
-                          {periodFrom ? formatYearMonth(periodFrom) : ''}
-                          {(periodFrom || periodTo) && ' 〜 '}
-                          {periodTo ? formatYearMonth(periodTo) : ''}
-                          {(periodFrom || periodTo) && (!includeUnknown ? ' (不明除外)' : '')}
-                          {(!periodFrom && !periodTo && !includeUnknown) && '「（不明）」を除外'}
-                        </span>
-                      </span>
-                    )}
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-stone-100/50 p-5 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center gap-4">
+                    <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5 whitespace-nowrap">
+                      <Search size={16} className="text-stone-400 drop-shadow-sm" />
+                      複数ワードの条件
+                    </label>
+                    <div className="flex flex-wrap bg-stone-200/80 p-2.5 rounded-2xl shadow-inner w-full sm:w-auto gap-3 overflow-visible">
+                      <button
+                        onClick={() => setSearchMode('OR')}
+                        className={`flex-1 sm:flex-none px-5 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
+                          searchMode === 'OR' 
+                            ? 'bg-gradient-to-b from-orange-400 to-orange-500 text-white font-bold shadow-[0_4px_0_0_#c2410c] -translate-y-[2px]' 
+                            : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                        }`}
+                      >
+                        いずれかを含む (OR)
+                      </button>
+                      <button
+                        onClick={() => setSearchMode('AND')}
+                        className={`flex-1 sm:flex-none px-5 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
+                          searchMode === 'AND' 
+                            ? 'bg-gradient-to-b from-sky-400 to-sky-500 text-white font-bold shadow-[0_4px_0_0_#0284c7] -translate-y-[2px]' 
+                            : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                        }`}
+                      >
+                        すべて含む (AND)
+                      </button>
+                    </div>
                   </div>
 
-                  {comparisonMode === 'prefecture' && (
-                    <button
-                      onClick={() => setShowOnlyCpa(!showOnlyCpa)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
-                        showOnlyCpa 
-                          ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-none translate-y-[2px]' 
-                          : 'bg-white border-stone-200 text-stone-500 shadow-[0_2px_0_0_#d6d3d1] active:shadow-none active:translate-y-[2px] hover:bg-stone-50'
-                      }`}
-                    >
-                      <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${showOnlyCpa ? 'bg-rose-400 border-rose-400' : 'border-stone-300 bg-white'}`}>
-                        {showOnlyCpa && <Check size={10} className="text-white" />}
+                  <div className="bg-stone-100/50 p-5 rounded-[1.5rem] border-4 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center gap-4">
+                    <label className="text-sm font-bold text-stone-600 flex items-center gap-1.5 whitespace-nowrap">
+                      <Tag size={16} className="text-stone-400 drop-shadow-sm" />
+                      求人の種類
+                    </label>
+                    <div className="flex flex-wrap bg-stone-200/80 p-2.5 rounded-2xl shadow-inner w-full sm:w-auto gap-3 overflow-visible">
+                      <button
+                        onClick={() => setCampaignFilter('all')}
+                        className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
+                          campaignFilter === 'all' 
+                            ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
+                            : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                        }`}
+                      >
+                        すべて
+                      </button>
+                      <button
+                        onClick={() => setCampaignFilter('sa-only')}
+                        className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
+                          campaignFilter === 'sa-only' 
+                            ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
+                            : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                        }`}
+                      >
+                        「SA-」のみ
+                      </button>
+                      <button
+                        onClick={() => setCampaignFilter('non-sa-only')}
+                        className={`flex-1 sm:flex-none px-4 py-2.5 text-sm rounded-xl transition-all whitespace-nowrap ${
+                          campaignFilter === 'non-sa-only' 
+                            ? 'bg-gradient-to-b from-green-400 to-emerald-500 text-white font-bold shadow-[0_4px_0_0_#047857] -translate-y-[2px]' 
+                            : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                        }`}
+                      >
+                        「SA-」以外
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t-4 border-stone-100 border-dashed pt-5">
+                  <div className="flex items-start gap-2 text-stone-500 text-sm font-bold bg-amber-50 p-3 rounded-xl border-2 border-amber-100 w-full">
+                    <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
+                    <p>
+                      スペース区切りで複数キーワードの {searchMode === 'AND' ? 'AND検索' : 'OR検索'} が可能です。フリーワードと勤務地の両方に入力がある場合、双方の条件を満たす行のみが集計対象となります。
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleApplyFilters}
+                    className={`flex-shrink-0 px-8 py-3.5 rounded-2xl font-bold text-base transition-all flex items-center gap-2 ${
+                      hasUnappliedChanges
+                        ? 'bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-[0_6px_0_0_#9f1239] hover:brightness-110 active:shadow-none active:translate-y-[6px]'
+                        : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-[0_6px_0_0_#d6d3d1]'
+                    }`}
+                    disabled={!hasUnappliedChanges}
+                  >
+                    <PlayCircle size={20} className={hasUnappliedChanges ? "animate-pulse" : ""} />
+                    {hasUnappliedChanges ? 'この条件で集計する' : '集計は最新です'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] border-4 border-white flex flex-col mb-10 overflow-clip min-h-[400px]">
+                
+                <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-md rounded-t-[2rem] border-b-4 border-stone-100 flex flex-col">
+                  
+                  <div className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 shrink-0 rounded-t-[2rem]">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                      <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2 whitespace-nowrap drop-shadow-sm">
+                        <Activity size={28} className="text-rose-400 drop-shadow-sm" /> 集計結果
+                        {hasUnappliedChanges && (
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 border-2 border-amber-200 px-3 py-1.5 rounded-xl ml-2 shadow-inner">
+                            <AlertCircle size={14} /> 条件が変更されています
+                          </span>
+                        )}
+                      </h2>
+                      
+                      <div className="flex bg-stone-200/80 p-1.5 rounded-2xl shadow-inner gap-2">
+                        <button
+                          onClick={() => setComparisonMode('job')}
+                          className={`px-5 py-2 text-xs rounded-xl transition-all ${
+                            comparisonMode === 'job' 
+                              ? 'bg-gradient-to-b from-rose-400 to-rose-500 text-white font-bold shadow-[0_4px_0_0_#be123c] -translate-y-[2px]' 
+                              : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                          }`}
+                        >
+                          関連職種比較
+                        </button>
+                        <button
+                          onClick={() => setComparisonMode('prefecture')}
+                          className={`px-5 py-2 text-xs rounded-xl transition-all ${
+                            comparisonMode === 'prefecture' 
+                              ? 'bg-gradient-to-b from-rose-400 to-rose-500 text-white font-bold shadow-[0_4px_0_0_#be123c] -translate-y-[2px]' 
+                              : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                          }`}
+                        >
+                          都道府県比較
+                        </button>
+                        <button
+                          onClick={() => setComparisonMode('period')}
+                          className={`px-5 py-2 text-xs rounded-xl transition-all ${
+                            comparisonMode === 'period' 
+                              ? 'bg-gradient-to-b from-indigo-400 to-indigo-500 text-white font-bold shadow-[0_4px_0_0_#4338ca] -translate-y-[2px]' 
+                              : 'bg-white/80 text-stone-500 font-bold shadow-[0_4px_0_0_#d6d3d1] hover:bg-white hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d6d3d1]'
+                          }`}
+                        >
+                          運用月比較
+                        </button>
                       </div>
-                      CPA発生のみ
-                    </button>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:justify-end w-full lg:w-auto">
+                      
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="text-stone-500 font-bold mr-1 flex items-center gap-1">
+                          <Filter size={14} className="text-stone-400" /> 適用中の条件:
+                        </span>
+                        
+                        {!freeWord && !location && !categoryFilter && campaignFilter === 'all' && !periodFrom && !periodTo && includeUnknown && (
+                          <span className="px-3 py-1.5 bg-stone-100 text-stone-500 font-bold rounded-xl border-2 border-stone-200">
+                            指定なし（全データ）
+                          </span>
+                        )}
+
+                        {categoryFilter && (
+                          <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
+                            <FolderOpen size={12} className="text-amber-500" /> 
+                            <span>{categoryFilter}</span>
+                          </span>
+                        )}
+
+                        {campaignFilter !== 'all' && (
+                          <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
+                            <Tag size={12} className="text-green-500" /> 
+                            <span>
+                              {campaignFilter === 'sa-only' ? '「SA-」のみ' : '「SA-」以外'}
+                            </span>
+                          </span>
+                        )}
+
+                        {(periodFrom || periodTo || !includeUnknown) && (
+                          <span className="px-3 py-1.5 bg-white text-stone-600 rounded-xl border-2 border-stone-200 font-bold flex items-center gap-1 shadow-sm">
+                            <Calendar size={12} className="text-indigo-500" /> 
+                            <span>
+                              {periodFrom ? formatYearMonth(periodFrom) : ''}
+                              {(periodFrom || periodTo) && ' 〜 '}
+                              {periodTo ? formatYearMonth(periodTo) : ''}
+                              {(periodFrom || periodTo) && (!includeUnknown ? ' (不明除外)' : '')}
+                              {(!periodFrom && !periodTo && !includeUnknown) && '「（不明）」を除外'}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      {comparisonMode === 'prefecture' && (
+                        <button
+                          onClick={() => setShowOnlyCpa(!showOnlyCpa)}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
+                            showOnlyCpa 
+                              ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-none translate-y-[2px]' 
+                              : 'bg-white border-stone-200 text-stone-500 shadow-[0_2px_0_0_#d6d3d1] active:shadow-none active:translate-y-[2px] hover:bg-stone-50'
+                          }`}
+                        >
+                          <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${showOnlyCpa ? 'bg-rose-400 border-rose-400' : 'border-stone-300 bg-white'}`}>
+                            {showOnlyCpa && <Check size={10} className="text-white" />}
+                          </div>
+                          CPA発生のみ
+                        </button>
+                      )}
+
+                      <div className="relative" ref={dropdownRef}>
+                        <button
+                          onClick={() => setIsColumnDropdownOpen(!isColumnDropdownOpen)}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 transition-all font-bold text-sm text-white ${
+                            isColumnDropdownOpen 
+                              ? 'bg-gradient-to-b from-fuchsia-400 to-fuchsia-500 border-fuchsia-400 shadow-none translate-y-[4px]' 
+                              : 'bg-gradient-to-b from-purple-400 to-fuchsia-500 border-purple-300 shadow-[0_4px_0_0_#86198f] active:shadow-none active:translate-y-[4px] hover:brightness-110'
+                          }`}
+                        >
+                          <Columns size={18} className="text-purple-100" />
+                          表示列
+                        </button>
+                        
+                        {isColumnDropdownOpen && (
+                          <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-[0_12px_24px_rgba(0,0,0,0.15)] border-4 border-stone-100 z-[70] overflow-hidden flex flex-col p-3 gap-3">
+                            <div className="grid grid-cols-3 gap-2 pb-3 border-b-4 border-stone-100 border-dashed">
+                              <button 
+                                onClick={() => setVisibleColumns(['ctr', 'applyStartRate', 'cvr', 'cpc', 'cpa'])}
+                                className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
+                              >
+                                効率のみ
+                              </button>
+                              <button 
+                                onClick={() => setVisibleColumns(['count', 'cost', 'clicks', 'applies', 'cvr', 'cpc', 'cpa'])}
+                                className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
+                              >
+                                標準
+                              </button>
+                              <button 
+                                onClick={() => setVisibleColumns(allStatItems.map(i => i.id))}
+                                className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
+                              >
+                                すべて
+                              </button>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-2">
+                              {allStatItems.map((item) => {
+                                const isChecked = visibleColumns.includes(item.id);
+                                return (
+                                  <label 
+                                    key={`col-toggle-${item.id}`} 
+                                    className="flex items-center gap-3 p-2.5 hover:bg-purple-50 rounded-xl cursor-pointer transition-colors border-2 border-transparent hover:border-purple-100"
+                                  >
+                                    <input 
+                                      type="checkbox" 
+                                      className="sr-only" 
+                                      checked={isChecked} 
+                                      onChange={() => toggleColumn(item.id)} 
+                                    />
+                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors shadow-inner ${isChecked ? 'bg-gradient-to-b from-purple-400 to-fuchsia-500 border-none' : 'border-stone-300 bg-stone-100'}`}>
+                                      {isChecked && <Check size={16} className="text-white drop-shadow-sm" />}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-stone-700">
+                                      <span className="text-stone-400">{item.icon}</span>
+                                      <span className="font-bold text-sm">{item.title}</span>
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="hidden sm:block w-1 h-8 bg-stone-200 rounded-full mx-2"></div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleCopyTable}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 transition-all font-bold text-sm text-white ${
+                            isCopied 
+                              ? 'bg-gradient-to-b from-teal-400 to-teal-500 border-teal-400 shadow-none translate-y-[4px]' 
+                              : 'bg-gradient-to-b from-emerald-400 to-teal-500 border-emerald-300 shadow-[0_4px_0_0_#0f766e] active:shadow-none active:translate-y-[4px] hover:brightness-110'
+                          }`}
+                        >
+                          {isCopied ? <Check size={18} className="text-white" /> : <Copy size={18} className="text-emerald-100" />}
+                          {isCopied ? 'コピーしました！' : '表をコピー'}
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {comparisonMode === 'period' && (
+                    <div className="bg-indigo-50/80 px-6 py-4 border-t-4 border-white flex flex-col md:flex-row items-start md:items-center gap-6">
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <span className="font-bold text-indigo-700 text-sm bg-white px-3 py-2 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border-2 border-indigo-100 flex-shrink-0">期間 A</span>
+                        <select
+                          value={comparePeriodAFrom}
+                          onChange={(e) => setComparePeriodAFrom(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2 bg-white border-2 border-indigo-100 rounded-xl focus:outline-none focus:border-indigo-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">開始月</option>
+                          {availableYearMonths.map(ym => <option key={`fromA-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                        <span className="text-stone-400 font-bold">〜</span>
+                        <select
+                          value={comparePeriodATo}
+                          onChange={(e) => setComparePeriodATo(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2 bg-white border-2 border-indigo-100 rounded-xl focus:outline-none focus:border-indigo-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">終了月</option>
+                          {availableYearMonths.map(ym => <option key={`toA-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <span className="font-bold text-rose-700 text-sm bg-white px-3 py-2 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border-2 border-rose-100 flex-shrink-0">期間 B</span>
+                        <select
+                          value={comparePeriodBFrom}
+                          onChange={(e) => setComparePeriodBFrom(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2 bg-white border-2 border-rose-100 rounded-xl focus:outline-none focus:border-rose-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">開始月</option>
+                          {availableYearMonths.map(ym => <option key={`fromB-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                        <span className="text-stone-400 font-bold">〜</span>
+                        <select
+                          value={comparePeriodBTo}
+                          onChange={(e) => setComparePeriodBTo(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2 bg-white border-2 border-rose-100 rounded-xl focus:outline-none focus:border-rose-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
+                        >
+                          <option value="">終了月</option>
+                          {availableYearMonths.map(ym => <option key={`toB-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
+                        </select>
+                      </div>
+                      <div className="text-xs font-bold text-stone-500 flex items-center gap-1 bg-white px-3 py-2 rounded-xl border-2 border-stone-100">
+                        <AlertCircle size={16} className="text-indigo-400" /> ※(不明)データは比較から除外されます
+                      </div>
+                    </div>
                   )}
 
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      onClick={() => setIsColumnDropdownOpen(!isColumnDropdownOpen)}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 transition-all font-bold text-sm text-white ${
-                        isColumnDropdownOpen 
-                          ? 'bg-gradient-to-b from-fuchsia-400 to-fuchsia-500 border-fuchsia-400 shadow-none translate-y-[4px]' 
-                          : 'bg-gradient-to-b from-purple-400 to-fuchsia-500 border-purple-300 shadow-[0_4px_0_0_#86198f] active:shadow-none active:translate-y-[4px] hover:brightness-110'
-                      }`}
-                    >
-                      <Columns size={18} className="text-purple-100" />
-                      表示列
-                    </button>
-                    
-                    {isColumnDropdownOpen && (
-                      <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-[0_12px_24px_rgba(0,0,0,0.15)] border-4 border-stone-100 z-[70] overflow-hidden flex flex-col p-3 gap-3">
-                        <div className="grid grid-cols-3 gap-2 pb-3 border-b-4 border-stone-100 border-dashed">
-                          <button 
-                            onClick={() => setVisibleColumns(['ctr', 'applyStartRate', 'cvr', 'cpc', 'cpa'])}
-                            className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
-                          >
-                            効率のみ
-                          </button>
-                          <button 
-                            onClick={() => setVisibleColumns(['count', 'cost', 'clicks', 'applies', 'cvr', 'cpc', 'cpa'])}
-                            className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
-                          >
-                            標準
-                          </button>
-                          <button 
-                            onClick={() => setVisibleColumns(allStatItems.map(i => i.id))}
-                            className="px-2 py-2.5 text-[10px] font-bold bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-600 hover:bg-white shadow-[0_3px_0_0_#d6d3d1] active:shadow-none active:translate-y-[3px]"
-                          >
-                            すべて
-                          </button>
-                        </div>
-                        <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-2">
-                          {allStatItems.map((item) => {
-                            const isChecked = visibleColumns.includes(item.id);
-                            return (
-                              <label 
-                                key={`col-toggle-${item.id}`} 
-                                className="flex items-center gap-3 p-2.5 hover:bg-purple-50 rounded-xl cursor-pointer transition-colors border-2 border-transparent hover:border-purple-100"
-                              >
-                                <input 
-                                  type="checkbox" 
-                                  className="sr-only" 
-                                  checked={isChecked} 
-                                  onChange={() => toggleColumn(item.id)} 
-                                />
-                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors shadow-inner ${isChecked ? 'bg-gradient-to-b from-purple-400 to-fuchsia-500 border-none' : 'border-stone-300 bg-stone-100'}`}>
-                                  {isChecked && <Check size={16} className="text-white drop-shadow-sm" />}
-                                </div>
-                                <div className="flex items-center gap-2 text-stone-700">
-                                  <span className="text-stone-400">{item.icon}</span>
-                                  <span className="font-bold text-sm">{item.title}</span>
-                                </div>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="hidden sm:block w-1 h-8 bg-stone-200 rounded-full mx-2"></div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleCopyTable}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 transition-all font-bold text-sm text-white ${
-                        isCopied 
-                          ? 'bg-gradient-to-b from-teal-400 to-teal-500 border-teal-400 shadow-none translate-y-[4px]' 
-                          : 'bg-gradient-to-b from-emerald-400 to-teal-500 border-emerald-300 shadow-[0_4px_0_0_#0f766e] active:shadow-none active:translate-y-[4px] hover:brightness-110'
-                      }`}
-                    >
-                      {isCopied ? <Check size={18} className="text-white" /> : <Copy size={18} className="text-emerald-100" />}
-                      {isCopied ? 'コピーしました！' : '表をコピー'}
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-
-              {comparisonMode === 'period' && (
-                <div className="bg-indigo-50/80 px-6 py-4 border-t-4 border-white flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <span className="font-bold text-indigo-700 text-sm bg-white px-3 py-2 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border-2 border-indigo-100 flex-shrink-0">期間 A</span>
-                    <select
-                      value={comparePeriodAFrom}
-                      onChange={(e) => setComparePeriodAFrom(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2 bg-white border-2 border-indigo-100 rounded-xl focus:outline-none focus:border-indigo-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">開始月</option>
-                      {availableYearMonths.map(ym => <option key={`fromA-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                    <span className="text-stone-400 font-bold">〜</span>
-                    <select
-                      value={comparePeriodATo}
-                      onChange={(e) => setComparePeriodATo(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2 bg-white border-2 border-indigo-100 rounded-xl focus:outline-none focus:border-indigo-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">終了月</option>
-                      {availableYearMonths.map(ym => <option key={`toA-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <span className="font-bold text-rose-700 text-sm bg-white px-3 py-2 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border-2 border-rose-100 flex-shrink-0">期間 B</span>
-                    <select
-                      value={comparePeriodBFrom}
-                      onChange={(e) => setComparePeriodBFrom(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2 bg-white border-2 border-rose-100 rounded-xl focus:outline-none focus:border-rose-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">開始月</option>
-                      {availableYearMonths.map(ym => <option key={`fromB-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                    <span className="text-stone-400 font-bold">〜</span>
-                    <select
-                      value={comparePeriodBTo}
-                      onChange={(e) => setComparePeriodBTo(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2 bg-white border-2 border-rose-100 rounded-xl focus:outline-none focus:border-rose-300 transition-all font-bold text-stone-700 shadow-sm appearance-none cursor-pointer text-sm"
-                    >
-                      <option value="">終了月</option>
-                      {availableYearMonths.map(ym => <option key={`toB-${ym}`} value={ym}>{formatYearMonth(ym)}</option>)}
-                    </select>
-                  </div>
-                  <div className="text-xs font-bold text-stone-500 flex items-center gap-1 bg-white px-3 py-2 rounded-xl border-2 border-stone-100">
-                    <AlertCircle size={16} className="text-indigo-400" /> ※(不明)データは比較から除外されます
-                  </div>
-                </div>
-              )}
-
-              <div 
-                className={`overflow-x-auto overflow-y-hidden w-full bg-white custom-scrollbar-hide transition-opacity duration-200 ${isCalculating ? 'opacity-40 pointer-events-none' : ''}`} 
-                ref={headerScrollRef}
-                onScroll={handleScroll}
-              >
-                <table className="w-max min-w-full text-left border-collapse table-fixed">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-stone-100 to-stone-50">
-                      <th className={`sticky left-0 z-30 py-2 px-3 text-xs font-bold text-stone-500 bg-stone-100 table-cell-border`} style={KEYWORD_STYLE}>
-                        <div className={comparisonMode === 'prefecture' ? 'truncate' : ''} title="検索キーワード">
-                          検索キーワード
-                        </div>
-                      </th>
-                      <th className="sticky left-[200px] z-30 py-2 px-3 text-xs font-bold text-stone-500 bg-stone-50 table-cell-border" style={PREF_STYLE}>
-                        <div className="flex items-center gap-1.5">
-                          <MapPin size={14} className="text-stone-400" />
-                          <span>勤務地</span>
-                        </div>
-                      </th>
-                      {statItems.map((item) => (
-                        <th key={`head-${item.id}`} className="py-2 px-3 text-xs font-bold text-stone-500 bg-stone-50 table-cell-border" style={STAT_STYLE}>
-                          <div className="flex items-center justify-end gap-1.5">
-                            {React.cloneElement(item.icon, { size: 14 })}
-                            <span className="truncate" title={item.title}>{item.title}</span>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                    
-                    <tr className="bg-gradient-to-r from-sky-100 to-blue-50">
-                      <td 
-                        className={`sticky left-0 z-30 py-2 px-3 font-bold text-sm text-sky-900 bg-sky-100 table-cell-border-sky ${
-                          comparisonMode === 'prefecture' || comparisonMode === 'period' ? 'truncate' : 'whitespace-nowrap'
-                        }`}
-                        style={KEYWORD_STYLE}
-                        title={
-                          comparisonMode === 'prefecture' || comparisonMode === 'period'
-                            ? displayCombinedKeywordsStr || '（指定なし）'
-                            : displayFreeWord || '（指定なし）'
-                        }
-                      >
-                        {comparisonMode === 'prefecture' || comparisonMode === 'period'
-                          ? renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, 'sky')
-                          : renderSearchConditions(displayFreeWord, displaySearchMode, 'sky', '（指定なし）')
-                        }
-                      </td>
-                      <td 
-                        className="sticky left-[200px] z-30 py-2 px-3 font-bold text-sm text-sky-900 bg-sky-50 table-cell-border-sky whitespace-nowrap" 
-                        style={PREF_STYLE}
-                        title={displayLocation || '（全国）'}
-                      >
-                        {renderSearchConditions(displayLocation, displaySearchMode, 'sky', '（全国）')}
-                      </td>
-                      {statItems.map((item) => {
-                        const isNull = item.value === null;
-                        const formattedValue = isNull 
-                          ? '-' 
-                          : (typeof item.value === 'number' 
-                              ? item.value.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
-                              : item.value);
-                          
-                        return (
-                          <td key={`main-${item.id}`} className="py-2 px-3 bg-sky-50 table-cell-border-sky" style={STAT_STYLE}>
-                            <div className="flex items-baseline justify-end gap-1">
-                              <span className="text-sm font-bold text-sky-900 tracking-tight drop-shadow-sm leading-none">
-                                {formattedValue}
-                              </span>
-                              {!isNull && (
-                                <span className="text-[10px] font-bold text-sky-600/80 leading-none ml-0.5">
-                                  {item.unit}
-                                </span>
-                              )}
+                  <div 
+                    className={`overflow-x-auto overflow-y-hidden w-full bg-white custom-scrollbar-hide transition-opacity duration-200 ${isCalculating ? 'opacity-40 pointer-events-none' : ''}`} 
+                    ref={headerScrollRef}
+                    onScroll={handleScroll}
+                  >
+                    <table className="w-max min-w-full text-left border-collapse table-fixed">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-stone-100 to-stone-50">
+                          <th className={`sticky left-0 z-30 py-2 px-3 text-xs font-bold text-stone-500 bg-stone-100 table-cell-border`} style={KEYWORD_STYLE}>
+                            <div className={comparisonMode === 'prefecture' ? 'truncate' : ''} title="検索キーワード">
+                              検索キーワード
                             </div>
+                          </th>
+                          <th className="sticky left-[200px] z-30 py-2 px-3 text-xs font-bold text-stone-500 bg-stone-50 table-cell-border" style={PREF_STYLE}>
+                            <div className="flex items-center gap-1.5">
+                              <MapPin size={14} className="text-stone-400" />
+                              <span>勤務地</span>
+                            </div>
+                          </th>
+                          {statItems.map((item) => (
+                            <th key={`head-${item.id}`} className="py-2 px-3 text-xs font-bold text-stone-500 bg-stone-50 table-cell-border" style={STAT_STYLE}>
+                              <div className="flex items-center justify-end gap-1.5">
+                                {React.cloneElement(item.icon, { size: 14 })}
+                                <span className="truncate" title={item.title}>{item.title}</span>
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                        
+                        <tr className="bg-gradient-to-r from-sky-100 to-blue-50">
+                          <td 
+                            className={`sticky left-0 z-30 py-2 px-3 font-bold text-sm text-sky-900 bg-sky-100 table-cell-border-sky ${
+                              comparisonMode === 'prefecture' || comparisonMode === 'period' ? 'truncate' : 'whitespace-nowrap'
+                            }`}
+                            style={KEYWORD_STYLE}
+                            title={
+                              comparisonMode === 'prefecture' || comparisonMode === 'period'
+                                ? displayCombinedKeywordsStr || '（指定なし）'
+                                : displayFreeWord || '（指定なし）'
+                            }
+                          >
+                            {comparisonMode === 'prefecture' || comparisonMode === 'period'
+                              ? renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, 'sky')
+                              : renderSearchConditions(displayFreeWord, displaySearchMode, 'sky', '（指定なし）')
+                            }
                           </td>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-            </div>
-
-            <div 
-              className={`overflow-x-auto overflow-y-visible w-full custom-scrollbar-hide bg-white rounded-b-[2rem] transition-opacity duration-200 ${isCalculating ? 'opacity-40 pointer-events-none' : ''}`}
-              ref={bodyScrollRef}
-              onScroll={handleScroll}
-            >
-              <table className="w-max min-w-full text-left border-collapse table-fixed">
-                <tbody>
-                  {comparisonMode === 'job' && simulationResults.length > 0 && (
-                    <>
-                      {simulationResults.map((result, idx) => (
-                        <tr key={`sim-${idx}`} className="group bg-white hover:bg-orange-50 transition-colors">
-                          <td className="sticky left-0 z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={KEYWORD_STYLE} title={result.keyword + (result.suffix || '')}>
-                            {result.keyword}
-                            {result.suffix && (
-                              <span className="text-stone-400 font-bold text-xs ml-1">{result.suffix}</span>
-                            )}
-                          </td>
-                          <td className="sticky left-[200px] z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={PREF_STYLE} title={displayLocation || '（全国）'}>
-                            {renderSearchConditions(displayLocation, displaySearchMode, 'stone', '（全国）')}
+                          <td 
+                            className="sticky left-[200px] z-30 py-2 px-3 font-bold text-sm text-sky-900 bg-sky-50 table-cell-border-sky whitespace-nowrap" 
+                            style={PREF_STYLE}
+                            title={displayLocation || '（全国）'}
+                          >
+                            {renderSearchConditions(displayLocation, displaySearchMode, 'sky', '（全国）')}
                           </td>
                           {statItems.map((item) => {
-                            const val = result[item.id];
-                            const isNull = val === null;
+                            const isNull = item.value === null;
                             const formattedValue = isNull 
                               ? '-' 
-                              : (typeof val === 'number' 
-                                  ? val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
-                                  : val);
+                              : (typeof item.value === 'number' 
+                                  ? item.value.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
+                                  : item.value);
                               
                             return (
-                              <td key={`sim-cell-${idx}-${item.id}`} className="py-1 px-3 table-cell-border" style={STAT_STYLE}>
+                              <td key={`main-${item.id}`} className="py-2 px-3 bg-sky-50 table-cell-border-sky" style={STAT_STYLE}>
                                 <div className="flex items-baseline justify-end gap-1">
-                                  <span className="text-sm font-bold text-stone-700 tracking-tight leading-none">
+                                  <span className="text-sm font-bold text-sky-900 tracking-tight drop-shadow-sm leading-none">
                                     {formattedValue}
                                   </span>
                                   {!isNull && (
-                                    <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
+                                    <span className="text-[10px] font-bold text-sky-600/80 leading-none ml-0.5">
                                       {item.unit}
                                     </span>
                                   )}
@@ -1621,157 +1585,212 @@ export default function App() {
                             );
                           })}
                         </tr>
-                      ))}
-                    </>
-                  )}
+                      </thead>
+                    </table>
+                  </div>
+                </div>
 
-                  {comparisonMode === 'prefecture' && prefectureResults.length > 0 && (
-                    <>
-                      {prefectureResults.map((result, idx) => {
-                        const shortPref = result.prefecture === '北海道' ? '北海道' : result.prefecture.replace(/[都府県]$/, '');
-                        
-                        let isHighlighted = false;
-                        if (displayLocation) {
-                          if (result.prefecture === '京都府') {
-                            const locWithoutTokyo = displayLocation.replace(/東京都?/g, '');
-                            isHighlighted = locWithoutTokyo.includes('京都');
-                          } else {
-                            isHighlighted = displayLocation.includes(shortPref);
-                          }
-                        }
-                        
-                        const rowBg = isHighlighted ? 'bg-emerald-50 hover:bg-emerald-100' : 'bg-white hover:bg-orange-50';
-                        const stickyBg = isHighlighted ? 'bg-emerald-100 group-hover:bg-emerald-200' : 'bg-stone-50 group-hover:bg-orange-100';
-                        
-                        const cellBorderClass = isHighlighted ? 'table-cell-border-emerald' : 'table-cell-border';
-
-                        return (
-                          <tr key={`pref-${idx}`} className={`group transition-colors ${rowBg}`}>
-                            <td 
-                              className={`sticky left-0 z-10 py-1 px-3 text-sm font-bold transition-colors truncate leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`}
-                              style={KEYWORD_STYLE}
-                              title={displayCombinedKeywordsStr || '（指定なし）'}
-                            >
-                              {renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, isHighlighted ? 'emerald' : 'stone')}
-                            </td>
-                            <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
-                              <div className="flex items-center gap-2">
-                                <div className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold flex-shrink-0 ${
-                                  idx === 0 ? 'bg-gradient-to-b from-yellow-400 to-amber-500 text-white shadow-[0_2px_0_0_#b45309]' :
-                                  idx === 1 ? 'bg-gradient-to-b from-slate-300 to-slate-400 text-white shadow-[0_2px_0_0_#64748b]' :
-                                  idx === 2 ? 'bg-gradient-to-b from-orange-400 to-rose-400 text-white shadow-[0_2px_0_0_#be123c]' :
-                                  'bg-stone-200 text-stone-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]'
-                                }`}>
-                                  {idx + 1}
-                                </div>
-                                <span className="truncate" title={result.prefecture}>{result.prefecture}</span>
-                              </div>
-                            </td>
-                            {statItems.map((item) => {
-                              const val = result[item.id];
-                              const isNull = val === null;
-                              const formattedValue = isNull
-                                ? '-' 
-                                : (typeof val === 'number' 
-                                    ? val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
-                                    : val);
-                                
-                              return (
-                                <td key={`pref-cell-${idx}-${item.id}`} className={`py-1 px-3 ${cellBorderClass}`} style={STAT_STYLE}>
-                                  <div className="flex items-baseline justify-end gap-1">
-                                    <span className="text-sm font-bold text-stone-700 tracking-tight leading-none">
-                                      {formattedValue}
-                                    </span>
-                                    {!isNull && (
-                                      <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
-                                        {item.unit}
+                <div 
+                  className={`overflow-x-auto overflow-y-visible w-full custom-scrollbar-hide bg-white rounded-b-[2rem] transition-opacity duration-200 ${isCalculating ? 'opacity-40 pointer-events-none' : ''}`}
+                  ref={bodyScrollRef}
+                  onScroll={handleScroll}
+                >
+                  <table className="w-max min-w-full text-left border-collapse table-fixed">
+                    <tbody>
+                      {comparisonMode === 'job' && simulationResults.length > 0 && (
+                        <>
+                          {simulationResults.map((result, idx) => (
+                            <tr key={`sim-${idx}`} className="group bg-white hover:bg-orange-50 transition-colors">
+                              <td className="sticky left-0 z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={KEYWORD_STYLE} title={result.keyword + (result.suffix || '')}>
+                                {result.keyword}
+                                {result.suffix && (
+                                  <span className="text-stone-400 font-bold text-xs ml-1">{result.suffix}</span>
+                                )}
+                              </td>
+                              <td className="sticky left-[200px] z-10 py-1 px-3 text-sm font-bold text-stone-700 bg-stone-50 group-hover:bg-orange-100 transition-colors whitespace-nowrap truncate table-cell-border leading-tight" style={PREF_STYLE} title={displayLocation || '（全国）'}>
+                                {renderSearchConditions(displayLocation, displaySearchMode, 'stone', '（全国）')}
+                              </td>
+                              {statItems.map((item) => {
+                                const val = result[item.id];
+                                const isNull = val === null;
+                                const formattedValue = isNull 
+                                  ? '-' 
+                                  : (typeof val === 'number' 
+                                      ? val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
+                                      : val);
+                                  
+                                return (
+                                  <td key={`sim-cell-${idx}-${item.id}`} className="py-1 px-3 table-cell-border" style={STAT_STYLE}>
+                                    <div className="flex items-baseline justify-end gap-1">
+                                      <span className="text-sm font-bold text-stone-700 tracking-tight leading-none">
+                                        {formattedValue}
                                       </span>
-                                    )}
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </>
-                  )}
+                                      {!isNull && (
+                                        <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
+                                          {item.unit}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </>
+                      )}
 
-                  {comparisonMode === 'period' && periodResults.length > 0 && (
-                    <>
-                      {periodResults.map((result, idx) => {
-                        const isDiff = result.isDiff;
-                        const rowBg = isDiff ? 'bg-indigo-50 hover:bg-indigo-100/70' : 'bg-white hover:bg-orange-50';
-                        const stickyBg = isDiff ? 'bg-indigo-100 group-hover:bg-indigo-200/70' : 'bg-stone-50 group-hover:bg-orange-100';
-                        const cellBorderClass = 'table-cell-border';
-
-                        return (
-                          <tr key={`period-${idx}`} className={`group transition-colors ${rowBg}`}>
-                            <td 
-                              className={`sticky left-0 z-10 py-1 px-3 text-sm font-bold transition-colors truncate leading-tight ${isDiff ? 'text-indigo-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`}
-                              style={KEYWORD_STYLE}
-                              title={result.label}
-                            >
-                              {result.label}
-                            </td>
-                            <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isDiff ? 'text-indigo-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
-                              {renderSearchConditions(displayLocation, displaySearchMode, isDiff ? 'sky' : 'stone', '（全国）')}
-                            </td>
-                            {statItems.map((item) => {
-                              const val = result[item.id];
-                              const isNull = val === null;
-                              let formattedValue = '-';
-                              let displayUnit = item.unit;
-                              let signColor = '';
-                              
-                              if (!isNull) {
-                                if (isDiff) {
-                                  const sign = val > 0 ? '+' : '';
-                                  formattedValue = sign + val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces });
-                                  if (item.unit === '%') displayUnit = 'pt';
-                                  if (val > 0) signColor = 'text-rose-600';
-                                  else if (val < 0) signColor = 'text-blue-600';
-                                } else {
-                                  formattedValue = val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces });
-                                }
+                      {comparisonMode === 'prefecture' && prefectureResults.length > 0 && (
+                        <>
+                          {prefectureResults.map((result, idx) => {
+                            const shortPref = result.prefecture === '北海道' ? '北海道' : result.prefecture.replace(/[都府県]$/, '');
+                            
+                            let isHighlighted = false;
+                            if (displayLocation) {
+                              if (result.prefecture === '京都府') {
+                                const locWithoutTokyo = displayLocation.replace(/東京都?/g, '');
+                                isHighlighted = locWithoutTokyo.includes('京都');
+                              } else {
+                                isHighlighted = displayLocation.includes(shortPref);
                               }
-                                
-                              return (
-                                <td key={`period-cell-${idx}-${item.id}`} className={`py-1 px-3 ${cellBorderClass}`} style={STAT_STYLE}>
-                                  <div className="flex items-baseline justify-end gap-1">
-                                    <span className={`text-sm font-bold tracking-tight leading-none ${signColor || 'text-stone-700'}`}>
-                                      {formattedValue}
-                                    </span>
-                                    {!isNull && (
-                                      <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
-                                        {displayUnit}
-                                      </span>
-                                    )}
+                            }
+                            
+                            const rowBg = isHighlighted ? 'bg-emerald-50 hover:bg-emerald-100' : 'bg-white hover:bg-orange-50';
+                            const stickyBg = isHighlighted ? 'bg-emerald-100 group-hover:bg-emerald-200' : 'bg-stone-50 group-hover:bg-orange-100';
+                            
+                            const cellBorderClass = isHighlighted ? 'table-cell-border-emerald' : 'table-cell-border';
+
+                            return (
+                              <tr key={`pref-${idx}`} className={`group transition-colors ${rowBg}`}>
+                                <td 
+                                  className={`sticky left-0 z-10 py-1 px-3 text-sm font-bold transition-colors truncate leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`}
+                                  style={KEYWORD_STYLE}
+                                  title={displayCombinedKeywordsStr || '（指定なし）'}
+                                >
+                                  {renderCombinedKeywords(displayFreeWord, displaySelectedJobTitles, displaySearchMode, isHighlighted ? 'emerald' : 'stone')}
+                                </td>
+                                <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isHighlighted ? 'text-emerald-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
+                                  <div className="flex items-center gap-2">
+                                    <div className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold flex-shrink-0 ${
+                                      idx === 0 ? 'bg-gradient-to-b from-yellow-400 to-amber-500 text-white shadow-[0_2px_0_0_#b45309]' :
+                                      idx === 1 ? 'bg-gradient-to-b from-slate-300 to-slate-400 text-white shadow-[0_2px_0_0_#64748b]' :
+                                      idx === 2 ? 'bg-gradient-to-b from-orange-400 to-rose-400 text-white shadow-[0_2px_0_0_#be123c]' :
+                                      'bg-stone-200 text-stone-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]'
+                                    }`}>
+                                      {idx + 1}
+                                    </div>
+                                    <span className="truncate" title={result.prefecture}>{result.prefecture}</span>
                                   </div>
                                 </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            <div 
-              className="sticky bottom-0 z-[70] w-full overflow-x-auto custom-scrollbar bg-stone-100/90 backdrop-blur-sm border-t-4 border-white rounded-b-[2rem]"
-              ref={dummyScrollRef}
-              onScroll={handleScroll}
-            >
-              <div style={{ width: `${totalTableWidth}px`, height: '1px' }}></div>
-            </div>
+                                {statItems.map((item) => {
+                                  const val = result[item.id];
+                                  const isNull = val === null;
+                                  const formattedValue = isNull
+                                    ? '-' 
+                                    : (typeof val === 'number' 
+                                        ? val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces }) 
+                                        : val);
+                                    
+                                  return (
+                                    <td key={`pref-cell-${idx}-${item.id}`} className={`py-1 px-3 ${cellBorderClass}`} style={STAT_STYLE}>
+                                      <div className="flex items-baseline justify-end gap-1">
+                                        <span className="text-sm font-bold text-stone-700 tracking-tight leading-none">
+                                          {formattedValue}
+                                        </span>
+                                        {!isNull && (
+                                          <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
+                                            {item.unit}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </>
+                      )}
 
+                      {comparisonMode === 'period' && periodResults.length > 0 && (
+                        <>
+                          {periodResults.map((result, idx) => {
+                            const isDiff = result.isDiff;
+                            const rowBg = isDiff ? 'bg-indigo-50 hover:bg-indigo-100/70' : 'bg-white hover:bg-orange-50';
+                            const stickyBg = isDiff ? 'bg-indigo-100 group-hover:bg-indigo-200/70' : 'bg-stone-50 group-hover:bg-orange-100';
+                            const cellBorderClass = 'table-cell-border';
+
+                            return (
+                              <tr key={`period-${idx}`} className={`group transition-colors ${rowBg}`}>
+                                <td 
+                                  className={`sticky left-0 z-10 py-1 px-3 text-sm font-bold transition-colors truncate leading-tight ${isDiff ? 'text-indigo-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`}
+                                  style={KEYWORD_STYLE}
+                                  title={result.label}
+                                >
+                                  {result.label}
+                                </td>
+                                <td className={`sticky left-[200px] z-10 py-1 px-3 text-sm font-bold whitespace-nowrap transition-colors leading-tight ${isDiff ? 'text-indigo-900' : 'text-stone-700'} ${stickyBg} ${cellBorderClass}`} style={PREF_STYLE}>
+                                  {renderSearchConditions(displayLocation, displaySearchMode, isDiff ? 'sky' : 'stone', '（全国）')}
+                                </td>
+                                {statItems.map((item) => {
+                                  const val = result[item.id];
+                                  const isNull = val === null;
+                                  let formattedValue = '-';
+                                  let displayUnit = item.unit;
+                                  let signColor = '';
+                                  
+                                  if (!isNull) {
+                                    if (isDiff) {
+                                      const sign = val > 0 ? '+' : '';
+                                      formattedValue = sign + val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces });
+                                      if (item.unit === '%') displayUnit = 'pt';
+                                      if (val > 0) signColor = 'text-rose-600';
+                                      else if (val < 0) signColor = 'text-blue-600';
+                                    } else {
+                                      formattedValue = val.toLocaleString('ja-JP', { minimumFractionDigits: item.decimalPlaces, maximumFractionDigits: item.decimalPlaces });
+                                    }
+                                  }
+                                    
+                                  return (
+                                    <td key={`period-cell-${idx}-${item.id}`} className={`py-1 px-3 ${cellBorderClass}`} style={STAT_STYLE}>
+                                      <div className="flex items-baseline justify-end gap-1">
+                                        <span className={`text-sm font-bold tracking-tight leading-none ${signColor || 'text-stone-700'}`}>
+                                          {formattedValue}
+                                        </span>
+                                        {!isNull && (
+                                          <span className="text-[10px] font-bold text-stone-400 ml-0.5 leading-none">
+                                            {displayUnit}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div 
+                  className="sticky bottom-0 z-[70] w-full overflow-x-auto custom-scrollbar bg-stone-100/90 backdrop-blur-sm border-t-4 border-white rounded-b-[2rem]"
+                  ref={dummyScrollRef}
+                  onScroll={handleScroll}
+                >
+                  <div style={{ width: `${totalTableWidth}px`, height: '1px' }}></div>
+                </div>
+
+              </div>
+            </div>
           </div>
-
         </div>
-      </div>
-    </div>
-  );
-}
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
