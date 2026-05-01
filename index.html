@@ -293,19 +293,11 @@
             console.warn("キャッシュの読み込みに失敗しました:", e);
           }
 
-          try {
-            let response;
-            try {
-              // ▼ まずは同階層のCSVファイル（相対パス）からの取得を試みる
-              response = await fetch('./data.csv');
-              if (!response.ok) throw new Error('Local file not found');
-            } catch (e) {
-              // ▼ プレビュー環境など相対パスが無効な場合や、ファイルが見つからない場合は、
-              // フォールバックとして元のGoogleスプレッドシートからデータを取得する
-              console.warn("ローカルの data.csv が見つからないか、プレビュー環境のためフォールバックURLを使用します。");
-              const fallbackUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSiVeQSkfiHCujV6SG1q5UQwyMAxnEDVaUD8mwdPK8q3rXCsh_XDIR9fYwHmhknfrv_a3mxebwH28HB/pub?gid=0&single=true&output=csv';
-              response = await fetch(fallbackUrl);
-            }
+          response = await fetch('/data');
+
+          if (!response.ok) {
+           throw new Error(`CSVデータの取得に失敗しました。status: ${response.status}`);
+          }
             
             if (!response.ok) {
               throw new Error('ネットワークエラーにより最新データの取得に失敗しました。');
