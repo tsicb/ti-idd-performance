@@ -282,51 +282,39 @@
         const fetchData = async () => {
           let cachedText = null;
           
-          try {
-            cachedText = window.localStorage.getItem(CACHE_KEY);
-            if (cachedText) {
-              const parsedData = parseCSV(cachedText);
-              setData(parsedData);
-              setLoading(false);
-            }
-          } catch (e) {
-            console.warn("キャッシュの読み込みに失敗しました:", e);
-          }
+try {
+  let response;
 
-          response = await fetch('/data');
+  response = await fetch('/data');
 
-          if (!response.ok) {
-           throw new Error(`CSVデータの取得に失敗しました。status: ${response.status}`);
-          }
-            
-            if (!response.ok) {
-              throw new Error('ネットワークエラーにより最新データの取得に失敗しました。');
-            }
-            
-            const csvText = await response.text();
-            
-            if (cachedText === csvText) {
-              return; 
-            }
-            
-            try {
-              window.localStorage.setItem(CACHE_KEY, csvText);
-            } catch (e) {
-              console.warn("キャッシュの保存に失敗しました:", e);
-            }
+  if (!response.ok) {
+    throw new Error(`CSVデータの取得に失敗しました。status: ${response.status}`);
+  }
 
-            const parsedData = parseCSV(csvText);
-            setData(parsedData);
-            setLoading(false);
-            setError(null);
-            
-          } catch (err) {
-            if (!cachedText) {
-              setError(err.message);
-              setLoading(false);
-            }
-            console.error('Fetch error:', err);
-          }
+  const csvText = await response.text();
+
+  if (cachedText === csvText) {
+    return; 
+  }
+
+  try {
+    window.localStorage.setItem(CACHE_KEY, csvText);
+  } catch (e) {
+    console.warn("キャッシュの保存に失敗しました:", e);
+  }
+
+  const parsedData = parseCSV(csvText);
+  setData(parsedData);
+  setLoading(false);
+  setError(null);
+
+} catch (err) {
+  if (!cachedText) {
+    setError(err.message);
+    setLoading(false);
+  }
+  console.error('Fetch error:', err);
+}
         };
 
         fetchData();
