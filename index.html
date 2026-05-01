@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>天市×indeedPLUS運用実績</title>
-
+  
+  <!-- redeploy 20260429 -->
   <!-- React & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -191,8 +193,6 @@
     const PREF_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
     const STAT_STYLE = { width: '140px', minWidth: '140px', maxWidth: '140px' };
 
-    const CACHE_KEY = 'indeed_plus_csv_data';
-
     // --- 3. メインのアプリケーションコンポーネント ---
     function App() {
       const [data, setData] = useState([]);
@@ -278,59 +278,75 @@
 
       useEffect(() => {
         const fetchData = async () => {
-          let cachedText = null;
-          
           try {
-            cachedText = window.localStorage.getItem(CACHE_KEY);
-            if (cachedText) {
-              const parsedData = parseCSV(cachedText);
-              setData(parsedData);
-              setLoading(false);
-            }
-          } catch (e) {
-            console.warn("キャッシュの読み込みに失敗しました:", e);
-          }
-
-          try {
-            let response;
+            let csvFiles = [];
+            
+            // 1. data-list.json の取得を試みる
             try {
-              // ▼ まずは同階層のCSVファイル（相対パス）からの取得を試みる
-              response = await fetch('./data.csv');
-              if (!response.ok) throw new Error('Local file not found');
+              const listResponse = await fetch('./data-list.json');
+              if (listResponse.ok) {
+                const listData = await listResponse.json();
+                if (listData.files && Array.isArray(listData.files)) {
+                  csvFiles = listData.files;
+                }
+              } else {
+                // data-list.jsonがない場合は、デフォルトで data.csv を対象にする
+                console.log("data-list.json が見つからないため、従来の data.csv を読み込みます。");
+                csvFiles = ['./data.csv'];
+              }
             } catch (e) {
-              // ▼ プレビュー環境など相対パスが無効な場合や、ファイルが見つからない場合は、
-              // フォールバックとして元のGoogleスプレッドシートからデータを取得する
-              console.warn("ローカルの data.csv が見つからないか、プレビュー環境のためフォールバックURLを使用します。");
+              console.log("data-list.json のフェッチに失敗しました。従来の data.csv を読み込みます。");
+              csvFiles = ['./data.csv'];
+            }
+
+            let allParsedData = [];
+
+            // 2. 各CSVファイルを並列で取得して解析
+            if (csvFiles.length > 0) {
+              // プレビュー環境などでのフォールバックURL
               const fallbackUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSiVeQSkfiHCujV6SG1q5UQwyMAxnEDVaUD8mwdPK8q3rXCsh_XDIR9fYwHmhknfrv_a3mxebwH28HB/pub?gid=0&single=true&output=csv';
-              response = await fetch(fallbackUrl);
-            }
-            
-            if (!response.ok) {
-              throw new Error('ネットワークエラーにより最新データの取得に失敗しました。');
-            }
-            
-            const csvText = await response.text();
-            
-            if (cachedText === csvText) {
-              return; 
-            }
-            
-            try {
-              window.localStorage.setItem(CACHE_KEY, csvText);
-            } catch (e) {
-              console.warn("キャッシュの保存に失敗しました:", e);
+
+              const fetchPromises = csvFiles.map(async (fileUrl) => {
+                try {
+                  let response = await fetch(fileUrl);
+                  if (!response.ok) throw new Error(`${fileUrl} not found`);
+                  const csvText = await response.text();
+                  return parseCSV(csvText);
+                } catch (err) {
+                  console.warn(`ローカルファイル ${fileUrl} の取得に失敗しました。`);
+                  // 1ファイルのみ（従来の挙動）でフォールバックが機能するように調整
+                  if (csvFiles.length === 1 && fileUrl === './data.csv') {
+                      console.warn("フォールバックURLを使用します。");
+                      const fallbackResponse = await fetch(fallbackUrl);
+                      if (fallbackResponse.ok) {
+                          const csvText = await fallbackResponse.text();
+                          return parseCSV(csvText);
+                      }
+                  }
+                  return []; // 取得失敗したファイルは無視（空配列を返す）
+                }
+              });
+
+              // すべてのファイルの解析結果を待つ
+              const results = await Promise.all(fetchPromises);
+              
+              // 結果を1つの配列に結合
+              results.forEach(parsedData => {
+                allParsedData = allParsedData.concat(parsedData);
+              });
             }
 
-            const parsedData = parseCSV(csvText);
-            setData(parsedData);
+            if (allParsedData.length === 0) {
+               throw new Error('データの取得に失敗しました。ファイルが存在するか確認してください。');
+            }
+
+            setData(allParsedData);
             setLoading(false);
             setError(null);
             
           } catch (err) {
-            if (!cachedText) {
-              setError(err.message);
-              setLoading(false);
-            }
+            setError(err.message);
+            setLoading(false);
             console.error('Fetch error:', err);
           }
         };
