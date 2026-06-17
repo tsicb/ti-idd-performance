@@ -8,15 +8,16 @@
   
   <!-- redeploy 20260429 -->
   <!-- React & ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
   
   <!-- Babel (ブラウザ上でJSXをコンパイルするために必要) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    window.tailwind = window.tailwind || {};
     tailwind.config = {
       theme: {
         extend: {
@@ -59,7 +60,7 @@
   <div id="root"></div>
 
   <!-- Reactアプリのコード -->
-  <script type="text/babel">
+  <script type="text/babel" data-presets="env,react">
     const { useState, useEffect, useMemo, useRef } = React;
 
     // --- 1. アイコンコンポーネント ---
